@@ -62,6 +62,13 @@ h2 .n{font-size:.78rem;opacity:.85;font-weight:400}
  box-shadow:0 1px 4px rgba(0,0,0,.07);text-align:center}
 #pick img{width:118px;border-radius:9px;display:block;margin:0 auto 8px}
 .card .ph,.card img.cv{cursor:pointer}
+.dot{font-size:.72rem;padding:3px 10px;border-radius:11px;background:#eceaf7;color:#6c63c9}
+.dot.ok{background:#e5f6ef;color:#159a6d}.dot.w{background:#fdf3e0;color:#b8791b}
+.dot.bad{background:#fdeaea;color:#c0392b}
+.snap{display:flex;align-items:center;gap:9px;padding:8px 2px;border-bottom:1px solid #f1f1f6;font-size:.78rem}
+.snap:last-child{border-bottom:none}.snap b{color:#2b2b6f}
+.snap .when{color:#888;font-size:.72rem;direction:ltr}
+.snap button{margin-right:auto;font-size:.7rem;padding:4px 11px}
 #ov{position:fixed;inset:0;background:rgba(20,20,40,.55);display:none;z-index:50;
  align-items:flex-start;justify-content:center;padding:26px 12px;overflow:auto}
 #ov.on{display:flex}
@@ -106,6 +113,8 @@ h2 .n{font-size:.78rem;opacity:.85;font-weight:400}
     <button class="g" id="btnSync">استيراد من موقع</button>
     <button class="g" id="btnPick">شوف وش أشوف</button>
     <button class="g" id="btnUp">الحلقات القادمة</button>
+    <button class="g" id="btnSync">المزامنة والنسخ</button>
+    <span class="dot" id="syncDot">غير مربوط</span>
     <button class="g" id="btnExp">تصدير</button>
     <button class="g" id="btnImp">استيراد</button>
     <button class="g" id="btnReset">تصفير</button>
@@ -168,10 +177,24 @@ h2 .n{font-size:.78rem;opacity:.85;font-weight:400}
     <button class="g" id="fixClose">إغلاق</button>
   </div>
 </div></div>
+<div id="ov2"><div class="modal">
+  <h3>المزامنة والنسخ الاحتياطية</h3>
+  <div class="hint">نسختك تُحفظ في Gist سرّي داخل حسابك على GitHub، وتُسحب تلقائياً عند فتح التطبيق على أي جهاز.</div>
+  <div id="ghBox"></div>
+  <hr style="border:none;border-top:1px solid #eee;margin:14px 0">
+  <h3>النسخ المحلية</h3>
+  <div class="hint">لقطات تُؤخذ تلقائياً داخل هذا المتصفح — للتراجع عن غلط أو استيراد خاطئ.</div>
+  <div id="snapList"></div>
+  <div class="row" style="margin-top:13px;justify-content:flex-start">
+    <button class="g" id="syncClose">إغلاق</button>
+  </div>
+</div></div>
 <script>
 const STATUS = [["watching", "أتابعه حالياً", "#e67e22"], ["loved", "عشقته", "#c0392b"], ["liked", "أعجبني", "#d68910"], ["watched", "شاهدته", "#5d6d7e"], ["paused", "موقوف", "#2980b9"], ["dropped", "لم يعجبني", "#7f8c8d"], ["plan", "قائمة الانتظار", "#16a085"], ["t1", "أنصح به بشدة", "#8e44ad"], ["t2", "ترشيح قوي", "#6c63c9"], ["t3", "ترشيح خفيف", "#95a5a6"]];
 const SEED = [{"t": "Frieren", "jp": "葬送のフリーレン", "d": "رحلة إلفية بعد انتهاء المغامرة، عن الزمن والفقد بإيقاع هادئ", "n": "من مفضلاتك", "s": "loved"}, {"t": "The Apothecary Diaries", "jp": "薬屋のひとりごと", "d": "صيدلانية ذكية تحلّ ألغاز القصر الإمبراطوري، ورومانس بطيء الاشتعال", "n": "من مفضلاتك", "s": "loved"}, {"t": "Oregairu", "jp": "やはり俺の青春ラブコメはまちがっている。", "d": "بطل ساخر منعزل ونادي المساعدة، وأنضج كتابة عن العلاقات الإنسانية", "n": "عشق", "s": "loved"}, {"t": "Toradora!", "jp": "とらドラ!", "d": "كلاسيكية الرومانس المدرسي، نضج عاطفي يفوق عمرها", "n": "عشق", "s": "loved"}, {"t": "Ore Monogatari!!", "jp": "俺物語!!", "d": "شاب ضخم مخيف وقلبه ذهب، والرومانس يتقدم بلا مماطلة", "n": "عشق", "s": "loved"}, {"t": "Barakamon", "jp": "ばらかもん", "d": "خطاط يُنفى لجزيرة صغيرة ويعيد اكتشاف نفسه", "n": "عشق", "s": "loved"}, {"t": "Gekkan Shoujo Nozaki-kun", "jp": "月刊少女野崎くん", "d": "اعتراف يُساء فهمه فتصير مساعدة رسّام شوجو", "n": "عشق", "s": "loved"}, {"t": "Dandadan", "jp": "ダンダダン", "d": "أشباح وفضائيون ورومانس مراهق بإنتاج بصري مجنون", "n": "عشق", "s": "loved"}, {"t": "Delicious in Dungeon", "jp": "ダンジョン飯", "d": "طبخ الوحوش في زنزانة، وبناء عالم من أذكى ما أُنتج", "n": "عشق", "s": "loved"}, {"t": "Cross Game", "jp": "クロスゲーム", "d": "بيسبول وفقد ورومانس صامت، من أداتشي ميتسورو", "n": "عشق", "s": "loved"}, {"t": "Silver Spoon", "jp": "銀の匙", "d": "مدرسة زراعية وشاب تائه، من كاتبة الخيميائي المعدني", "n": "عشق", "s": "loved"}, {"t": "Takopi's Original Sin", "jp": "タコピーの原罪", "d": "قصير جداً وموجع جداً عن الطفولة والقسوة", "n": "عشق", "s": "loved"}, {"t": "Your Lie in April", "jp": "四月は君の嘘", "d": "موسيقى ورومانس وفقد، بجمالية بصرية عالية", "n": "صفّقت للنهاية", "s": "loved"}, {"t": "Anohana", "jp": "あの日見た花の名前を僕達はまだ知らない。", "d": "خمسة أصدقاء وشبح صديقتهم، إحدى عشرة حلقة تكسر القلب", "n": "تحبه", "s": "loved"}, {"t": "Ao no Hako", "jp": "アオのハコ", "d": "رياضة ورومانس مدرسي بإنتاج ناعم", "n": "أعجبك كثيراً", "s": "loved"}, {"t": "Sakurasou no Pet na Kanojo", "jp": "さくら荘のペットな彼女", "d": "سكن الموهوبين، والفجوة بين الموهبة والاجتهاد", "n": "تحبه، جوّه حلو", "s": "loved"}, {"t": "Golden Time", "jp": "ゴールデンタイム", "d": "جامعة وفقدان ذاكرة، من كاتبة تورادورا", "n": "ممتاز", "s": "liked"}, {"t": "Kokoro Connect", "jp": "ココロコネクト", "d": "خمسة أصدقاء يتبادلون الأجساد وتنكشف أسرارهم", "n": "ممتاز", "s": "liked"}, {"t": "ReLIFE", "jp": "ReLIFE", "d": "ثلاثيني فاشل يعود للثانوية بجسد مراهق", "n": "ممتاز", "s": "liked"}, {"t": "Isekai Ojisan", "jp": "異世界おじさん", "d": "عائد من عالم آخر بعد سبعة عشر عاماً، كوميديا ساخرة", "n": "ممتاز", "s": "liked"}, {"t": "Tomo-chan wa Onnanoko!", "jp": "トモちゃんは女の子!", "d": "مسترجلة تحب صديق طفولتها الذي يراها واحداً من الشباب", "n": "أعجبك", "s": "liked"}, {"t": "Chuunibyou demo Koi ga Shitai!", "jp": "中二病でも恋がしたい!", "d": "مراهقون لم يتجاوزوا مرحلة التوهّم، كوميديا ثم وجع", "n": "أعجبك", "s": "liked"}, {"t": "Ao Haru Ride", "jp": "アオハライド", "d": "لقاء بعد سنين وقد تغيّر كلاهما", "n": "حلو", "s": "liked"}, {"t": "Akatsuki no Yona", "jp": "暁のヨナ", "d": "أميرة تفقد كل شيء وتبني نفسها من الصفر", "n": "حلو", "s": "liked"}, {"t": "Tonari no Kaibutsu-kun", "jp": "となりの怪物くん", "d": "مهووسة بالدراسة وولد عنيف غريب الأطوار", "n": "حلو", "s": "liked"}, {"t": "Grand Blue", "jp": "ぐらんぶる", "d": "جامعة ونادي غوص، ومن أضحك ما أُنتج", "n": "حلو", "s": "liked"}, {"t": "Danshi Koukousei no Nichijou", "jp": "男子高校生の日常", "d": "كوميديا عبثية بروح نيتشيجو", "n": "أعجبك", "s": "liked"}, {"t": "Hataraku Maou-sama!", "jp": "はたらく魔王さま!", "d": "ملك الشياطين يعمل في مطعم وجبات سريعة", "n": "أعجبك", "s": "liked"}, {"t": "Otonari no Tenshi-sama", "jp": "お隣の天使様にいつの間にか駄目人間にされていた件", "d": "جارة مثالية وعلاقة تُبنى بتفاصيل يومية", "n": "لا بأس به", "s": "liked"}, {"t": "Plastic Memories", "jp": "Plastic Memories", "d": "روبوتات لها تاريخ انتهاء صلاحية", "n": "شاهدته", "s": "liked"}, {"t": "Steins;Gate", "jp": "STEINS;GATE", "d": "الأب الروحي للحلقات الزمنية", "n": "", "s": "watched"}, {"t": "Higurashi no Naku Koro ni", "jp": "ひぐらしのなく頃に", "d": "قرية وحلقة زمنية ورعب نفسي", "n": "", "s": "watched"}, {"t": "Puella Magi Madoka Magica", "jp": "魔法少女まどか☆マギカ", "d": "تفكيك كامل لنوع الفتيات الساحرات", "n": "", "s": "watched"}, {"t": "Boku dake ga Inai Machi", "jp": "僕だけがいない街", "d": "قفزة للطفولة لمنع جريمة", "n": "", "s": "watched"}, {"t": "Made in Abyss", "jp": "メイドインアビス", "d": "هاوية سحيقة، جمال خلاب ووحشية مفاجئة", "n": "", "s": "watched"}, {"t": "Mushoku Tensei", "jp": "無職転生", "d": "أفضل إنتاج بصري في الإيسيكاي", "n": "", "s": "watched"}, {"t": "Monster", "jp": "MONSTER", "d": "تشويق نفسي بلا سحر ولا قدرات", "n": "", "s": "watched"}, {"t": "Vinland Saga", "jp": "ヴィンランド・サガ", "d": "انتقام ينقلب إلى شيء آخر تماماً", "n": "", "s": "watched"}, {"t": "86 Eighty-Six", "jp": "86-エイティシックス-", "d": "حرب وطبقية وعلاقة عبر الراديو", "n": "", "s": "watched"}, {"t": "Kaguya-sama wa Kokurasetai", "jp": "かぐや様は告らせたい", "d": "حرب نفسية رومانسية كوميدية", "n": "", "s": "watched"}, {"t": "Horimiya", "jp": "ホリミヤ", "d": "قرأته مانجا — العلاقة تكبر بعد الاعتراف", "n": "", "s": "watched"}, {"t": "Sono Bisque Doll wa Koi wo Suru", "jp": "その着せ替え人形は恋をする", "d": "كوسبلاي وشغف بهواية", "n": "", "s": "watched"}, {"t": "Kaoru Hana wa Rin to Saku", "jp": "薫る花は凛と咲く", "d": "فجوة بين مدرستين متضادتين", "n": "", "s": "watched"}, {"t": "Hyouka", "jp": "氷菓", "d": "ألغاز صغيرة ورومانس صامت", "n": "", "s": "watched"}, {"t": "Karakai Jouzu no Takagi-san", "jp": "からかい上手の高木さん", "d": "مناكفة يومية تتحول إلى حب", "n": "", "s": "watched"}, {"t": "Make Heroine ga Oosugiru!", "jp": "負けヒロインが多すぎる!", "d": "عن البنات اللاتي يخسرن في قصص الحب", "n": "", "s": "watched"}, {"t": "Blue Period", "jp": "ブルーピリオド", "d": "الرسم كطريق، والعذاب الذي فيه", "n": "", "s": "watched"}, {"t": "Tada-kun wa Koi wo Shinai", "jp": "多田くんは恋をしない", "d": "تصوير فوتوغرافي وأميرة أجنبية", "n": "", "s": "watched"}, {"t": "Komi-san wa Komyushou desu", "jp": "古見さんは、コミュ症です。", "d": "فتاة عاجزة عن الكلام وولد عادي يساعدها", "n": "", "s": "watched"}, {"t": "Bocchi the Rock!", "jp": "ぼっち・ざ・ろっく!", "d": "القلق الاجتماعي وفرقة روك", "n": "", "s": "watched"}, {"t": "Youjo Senki", "jp": "幼女戦記", "d": "إيسيكاي عسكري وسياسي", "n": "", "s": "watched"}, {"t": "Akagami no Shirayukihime", "jp": "赤髪の白雪姫", "d": "عشّابة وأمير، رومانس متدرج دافئ", "n": "", "s": "watched"}, {"t": "Ranma ½", "jp": "らんま1/2", "d": "كوميديا رومانسية كلاسيكية", "n": "", "s": "watched"}, {"t": "Mahoutsukai no Yome", "jp": "魔法使いの嫁", "d": "فتاة تُباع لساحر غير بشري", "n": "", "s": "watched"}, {"t": "Log Horizon", "jp": "ログ・ホライズン", "d": "إيسيكاي مبني على السياسة وبناء المجتمع", "n": "", "s": "watched"}, {"t": "Asobi Asobase", "jp": "あそびあそばせ", "d": "كوميديا وحشية ومريضة ومضحكة", "n": "", "s": "watched"}, {"t": "Hinamatsuri", "jp": "ヒナまつり", "d": "ياكوزا يربي فتاة بقدرات خارقة", "n": "", "s": "watched"}, {"t": "Ookami Kodomo no Ame to Yuki", "jp": "おおかみこどもの雨と雪", "d": "فِلم عن أم تربي طفلين نصف ذئب", "n": "", "s": "watched"}, {"t": "Kotonoha no Niwa", "jp": "言の葉の庭", "d": "فِلم قصير برسم استثنائي", "n": "", "s": "watched"}, {"t": "Great Teacher Onizuka", "jp": "GTO", "d": "ياكوزا سابق يصير مدرّساً", "n": "", "s": "watched"}, {"t": "Nisekoi", "jp": "ニセコイ", "d": "مواعدة مزيفة بجمالية شافت", "n": "", "s": "watched"}, {"t": "Yamada-kun to 7-nin no Majo", "jp": "山田くんと7人の魔女", "d": "تبادل أجساد وأسرار مدرسية", "n": "", "s": "watched"}, {"t": "Kanojo, Okarishimasu", "jp": "彼女、お借りします", "d": "حبيبة بالإيجار، رأي المتابعين منقسم", "n": "", "s": "watched"}, {"t": "Spy x Family", "jp": "SPY×FAMILY", "d": "عائلة مزيفة، كوميديا وإنتاج فخم", "n": "", "s": "watched"}, {"t": "Sakamoto Days", "jp": "SAKAMOTO DAYS", "d": "قاتل سابق يدير بقالة", "n": "", "s": "watched"}, {"t": "Seishun Buta Yarou", "jp": "青春ブタ野郎はバニーガール先輩の夢を見ない", "d": "ألغاز نفسية ورومانس، الأقرب لروح أوريغايرو", "n": "الموسم الأول — بقيت الأفلام", "s": "paused"}, {"t": "Saiki Kusuo no Psi-nan", "jp": "斉木楠雄のΨ難", "d": "قدرات خارقة وكوميديا سريعة جداً", "n": "النصف", "s": "paused"}, {"t": "Mob Psycho 100", "jp": "モブサイコ100", "d": "كوميديا وأكشن ونمو شخصي، الموسم الثالث ذروته", "n": "لم تكمله", "s": "paused"}, {"t": "Charlotte", "jp": "Charlotte シャーロット", "d": "قدرات خارقة ورومانس ومنعطف حاد", "n": "قبل الانعطاف", "s": "paused"}, {"t": "Roshidere", "jp": "時々ボソッとロシア語でデレる隣のアーリャさん", "d": "زميلة روسية تغازله بلغتها ظناً أنه لا يفهم", "n": "النصف", "s": "paused"}, {"t": "Tsuki ga Kirei", "jp": "月がきれい", "d": "أصدق تصوير للحب الأول — ترشيح متكرر", "n": "الحلقة الأولى", "s": "paused"}, {"t": "Shouwa Genroku Rakugo Shinjuu", "jp": "昭和元禄落語心中", "d": "فن الراكوغو عبر أجيال — ابدأ من الحلقة الثانية", "n": "الحلقة الأولى", "s": "paused"}, {"t": "Tsuredure Children", "jp": "徒然チルドレン", "d": "حلقات قصيرة عن ثنائيات عالقة قبل الاعتراف", "n": "بدأته", "s": "paused"}, {"t": "Lovely Complex", "jp": "ラブ★コン", "d": "كوميديا رومانسية عن فرق الطول", "n": "حاولت مراراً ولم تكمله", "s": "dropped"}, {"t": "Shikimori's Not Just a Cutie", "jp": "可愛いだけじゃない式守さん", "d": "ثنائي من الحلقة الأولى بإنتاج راقٍ", "n": "لم يعجبك", "s": "dropped"}, {"t": "Gimai Seikatsu", "jp": "義妹生活", "d": "أخوان بالتبني يتعاملان بحذر ومسافة", "n": "أوقفته", "s": "dropped"}, {"t": "Sukitte Ii na yo", "jp": "好きっていいなよ。", "d": "أشهر ولد بالمدرسة وفتاة منعزلة", "n": "ممل نوعاً ما", "s": "dropped"}, {"t": "Fumetsu no Anata e", "jp": "不滅のあなたへ", "d": "كائن خالد يتعلم معنى الإنسانية", "n": "أوقفته — يجلب الاكتئاب", "s": "dropped"}, {"t": "Eternal Boys", "jp": "永久少年 Eternal Boys", "d": "رجال في منتصف العمر يشكّلون فرقة أيدول", "n": "أوقفته", "s": "dropped"}, {"t": "Clannad", "jp": "CLANNAD", "d": "عائلة وفقد ووجع طويل", "n": "رفضته", "s": "dropped"}, {"t": "Paradise Kiss", "jp": "パラダイス・キス", "d": "طلاب تصميم أزياء يبنون علامتهم", "n": "قديم بالنسبة لمزاجك", "s": "dropped"}, {"t": "Maison Ikkoku", "jp": "めぞん一刻", "d": "رومانس ناضج كلاسيكي", "n": "قديم — ربما لاحقاً", "s": "dropped"}, {"t": "Shinsekai yori", "jp": "新世界より", "d": "مجتمع مستقبلي تنكشف أسراره طبقة طبقة", "n": "ليس الآن", "s": "dropped"}, {"t": "Spice and Wolf", "jp": "狼と香辛料", "d": "تاجر وإلهة قمح، اقتصاد وحوار ورومانس بطيء — الأقرب لروح الصيدلانية", "n": "", "s": "plan"}, {"t": "Honzuki no Gekokujou", "jp": "本好きの下剋上", "d": "عاشقة كتب تولد في عالم بلا كتب فتصنع الورق من الصفر", "n": "", "s": "plan"}, {"t": "Ping Pong the Animation", "jp": "ピンポン THE ANIMATION", "d": "عن الموهبة والفشل والصداقة — تجاوز الرسم، وليس رومانساً", "n": "", "s": "plan"}, {"t": "Kono Oto Tomare!", "jp": "この音とまれ!", "d": "شاب سيّئ السمعة يدخل نادي الكوتو في مدرسة راقية", "n": "", "s": "plan"}, {"t": "3-gatsu no Lion", "jp": "3月のライオン", "d": "شوغي ووحدة، لكنه ينتهي بالدفء — علاج لا مرض", "n": "", "s": "plan"}, {"t": "Just Because!", "jp": "Just Because!", "d": "طلاب سنة أخيرة وقصص حب معلّقة قبل التخرج", "n": "", "s": "plan"}, {"t": "Kimi wa Houkago Insomnia", "jp": "君は放課後インソムニア", "d": "أرق ومرصد مدرسي — الأقرب لجو الصندوق الأزرق", "n": "", "s": "plan"}, {"t": "Ouran Koukou Host Club", "jp": "桜蘭高校ホスト部", "d": "سخرية من كليشيهات الشوجو أذكى مما جاء بعدها", "n": "", "s": "plan"}, {"t": "Nodame Cantabile", "jp": "のだめカンタービレ", "d": "موسيقى كلاسيكية وثنائي غريب، كوميدي وعميق", "n": "", "s": "plan"}, {"t": "Net-juu no Susume", "jp": "ネト充のススメ", "d": "موظفة ثلاثينية تستقيل وتلعب أونلاين", "n": "", "s": "plan"}, {"t": "Mushishi", "jp": "蟲師", "d": "حلقات منفصلة تأملية عن كائنات روحية", "n": "", "s": "plan"}, {"t": "Kage no Jitsuryokusha ni Naritakute!", "jp": "陰の実力者になりたくて!", "d": "يتقمص دور الشرير الغامض مزحةً فتصير تخيلاته حقيقة", "n": "", "s": "plan"}, {"t": "Aharen-san wa Hakarenai", "jp": "阿波連さんははかれない", "d": "كوميديا هادئة غريبة الأطوار", "n": "", "s": "plan"}, {"t": "Wistoria: Wand and Sword", "jp": "杖と剣のウィストリア", "d": "أكاديمية سحر وطالب يقاتل بالسيف", "n": "", "s": "plan"}, {"t": "Koi wa Sekai Seifuku no Ato de", "jp": "恋は世界征服のあとで", "d": "بطل خارق وشريرة يتواعدان سراً", "n": "", "s": "plan"}, {"t": "Kuragehime", "jp": "海月姫", "d": "أوتاكو منطويات والتحوّل عبر المظهر", "n": "", "s": "plan"}, {"t": "Vivy: Fluorite Eye's Song", "jp": "Vivy -Fluorite Eye's Song-", "d": "ذكاء اصطناعي يحاول تغيير المستقبل عبر مئة عام. من كتابة تابّي ناغاتسوكي، نفس كاتب ري زيرو، وبنفس هوسه بالثمن والتكرار والفشل", "n": "", "s": "t1"}, {"t": "Boku no Kokoro no Yabai Yatsu", "jp": "僕の心のヤバイやつ", "d": "يبدأ ككوميديا مراهقين ويطلع من أصدق ما كُتب عن الخجل — التوأم الروحي للصندوق الأزرق", "n": "", "s": "t1"}, {"t": "Summertime Render", "jp": "サマータイムレンダ", "d": "حلقة موت زمنية في جزيرة صغيرة، ولغز محكم البناء. الأقرب لآلية ري زيرو", "n": "", "s": "t1"}, {"t": "Odd Taxi", "jp": "オッドタクシー", "d": "لغز جنائي مبني على الحوار فقط، وخيوطه تتجمّع في النهاية", "n": "", "s": "t1"}, {"t": "Skip and Loafer", "jp": "スキップとローファー", "d": "رومانس مدرسي دافئ وذكي، وشخصياته مكتوبة بنضج غير معتاد", "n": "", "s": "t1"}, {"t": "Yubisaki to Renren", "jp": "ゆびさきと恋々", "d": "بطلة صمّاء وشاب يجيد اللغات، والتواصل مكتوب بحساسية عالية", "n": "", "s": "t1"}, {"t": "Sakamichi no Apollon", "jp": "坂道のアポロン", "d": "جاز وصداقة وحب من طرف واحد في ستينات اليابان", "n": "", "s": "t1"}, {"t": "Hibike! Euphonium", "jp": "響け!ユーフォニアム", "d": "فرقة موسيقية مدرسية، وعلاقات مكتوبة بحساسية نادرة", "n": "", "s": "t1"}, {"t": "Chihayafuru", "jp": "ちはやふる", "d": "لعبة الكاروتا ومثلث عاطفي يمتد سنوات", "n": "", "s": "t1"}, {"t": "Katanagatari", "jp": "刀語", "d": "اثنتا عشرة حلقة طويلة، حوار نيسيو إيسين ونهاية موجعة", "n": "", "s": "t1"}, {"t": "Honey and Clover", "jp": "ハチミツとクローバー", "d": "طلاب فنون جامعيون وحب من طرف واحد. ناضج ومرّ وصادق", "n": "", "s": "t1"}, {"t": "White Album 2", "jp": "WHITE ALBUM2", "d": "مثلث عاطفي بلا أشرار — كلٌّ يجرح الآخر بصدق", "n": "", "s": "t1"}, {"t": "Given", "jp": "ギヴン", "d": "فرقة موسيقية وحزن وفقد، كتابته أقوى من كونه رومانساً", "n": "", "s": "t1"}, {"t": "Wotaku ni Koi wa Muzukashii", "jp": "ヲタクに恋は難しい", "d": "موظفون أوتاكو في الثلاثينات، رومانس ناضج بلا دراما مفتعلة", "n": "", "s": "t1"}, {"t": "Kubo-san wa Mob wo Yurusanai", "jp": "久保さんは僕を許さない", "d": "ولد شفاف اجتماعياً وزميلة هي الوحيدة التي تراه", "n": "", "s": "t2"}, {"t": "Ao Ashi", "jp": "アオアシ", "d": "كرة قدم ولاعب يتعلم قراءة الملعب بعقله", "n": "", "s": "t2"}, {"t": "Kaze ga Tsuyoku Fuiteiru", "jp": "風が強く吹いている", "d": "طلاب جامعة يُجرّون لفريق ماراثون", "n": "", "s": "t2"}, {"t": "Medalist", "jp": "メダリスト", "d": "تزلج فني، ومن أنظف الأعمال الرياضية عاطفياً", "n": "", "s": "t2"}, {"t": "Nagi no Asukara", "jp": "凪のあすから", "d": "رومانس وعالم تحت الماء، مشاعر متشابكة بشكل نادر", "n": "", "s": "t2"}, {"t": "Yesterday wo Utatte", "jp": "イエスタデイをうたって", "d": "خريجون تائهون وعلاقات معقدة، بجو خريفي حزين", "n": "", "s": "t2"}, {"t": "Kimi ni Todoke", "jp": "君に届け", "d": "فتاة يخافها الجميع لشكلها وقصة حبها", "n": "", "s": "t2"}, {"t": "Tsurune", "jp": "ツルネ", "d": "رماية بالقوس، هادئ ومصوَّر بشكل خيالي", "n": "", "s": "t2"}, {"t": "Adachi to Shimamura", "jp": "安達としまむら", "d": "بطيء جداً ومبني على التفاصيل الداخلية الصامتة", "n": "", "s": "t2"}, {"t": "Sasaki to Miyano", "jp": "佐々木と宮野", "d": "هادئ ولطيف ومريح، شخصياته محبوبة", "n": "", "s": "t2"}, {"t": "Sasayaku You ni Koi wo Utau", "jp": "ささやくように恋を唄う", "d": "موسيقى ومشاعر أولى، خفيف", "n": "", "s": "t2"}, {"t": "Watashi no Shiawase na Kekkon", "jp": "わたしの幸せな結婚", "d": "رومانس تاريخي هادئ بإنتاج راقٍ", "n": "", "s": "t2"}, {"t": "Senpai ga Uzai Kouhai no Hanashi", "jp": "先輩がうざい後輩の話", "d": "بيئة عمل وفرق حجم وشخصية، دافئ", "n": "", "s": "t2"}, {"t": "2.5-jigen no Ririsa", "jp": "2.5次元の誘惑", "d": "كوسبلاي ونادي مانجا — الأقرب لفكرة الدمية العاشقة", "n": "", "s": "t2"}, {"t": "Yofukashi no Uta", "jp": "よふかしのうた", "d": "ليل وهروب وعلاقة غريبة، بجمالية بصرية وموسيقية", "n": "", "s": "t2"}, {"t": "Tonikaku Kawaii", "jp": "トニカクカワイイ", "d": "يتزوجان من الحلقة الأولى، والقصة عن بناء العلاقة", "n": "", "s": "t2"}, {"t": "SK8 the Infinity", "jp": "SK∞ エスケーエイト", "d": "تزلج، ملوّن وسريع وممتع", "n": "", "s": "t2"}, {"t": "Nichijou", "jp": "日常", "d": "أعتى كوميديا عبثية أُنتجت", "n": "", "s": "t2"}, {"t": "Fune wo Amu", "jp": "舟を編む", "d": "فريق يؤلف قاموساً على مدى خمسة عشر عاماً", "n": "", "s": "t2"}, {"t": "Kotaro wa Hitorigurashi", "jp": "コタローは一人暮らし", "d": "طفل في الرابعة يعيش وحده — كوميدي ثم يوجع بهدوء", "n": "", "s": "t2"}, {"t": "Gakuen Babysitters", "jp": "学園ベビーシッターズ", "d": "دافئ ومريح ومضحك", "n": "", "s": "t2"}, {"t": "KonoSuba", "jp": "この素晴らしい世界に祝福を!", "d": "إيسيكاي ساخر يفكك النوع، ومن أضحك ما أُنتج", "n": "", "s": "t2"}, {"t": "Hai to Gensou no Grimgar", "jp": "灰と幻想のグリムガル", "d": "إيسيكاي واقعي قاسٍ، والموت له وزن", "n": "", "s": "t2"}, {"t": "Hamefura", "jp": "乙女ゲームの破滅フラグしかない悪役令嬢に転生してしまった…", "d": "تتقمص دور الشريرة وتحاول تجنّب نهايتها السيئة", "n": "", "s": "t2"}, {"t": "Loop 7-kaime no Akuyaku Reijou", "jp": "ループ7回目の悪役令嬢は、元敵国で自由気ままな花嫁生活を満喫する", "d": "بطلة تعيد حياتها للمرة الثامنة — سياسة ورومانس وذكاء", "n": "", "s": "t2"}, {"t": "Somali to Mori no Kamisama", "jp": "ソマリと森の神様", "d": "غولم يربي طفلة بشرية في عالم يكره البشر", "n": "", "s": "t2"}, {"t": "Kino no Tabi", "jp": "キノの旅", "d": "مسافرة تزور دولاً لكلٍّ فلسفتها", "n": "", "s": "t2"}, {"t": "Saihate no Paladin", "jp": "最果てのパラディン", "d": "صبي يربيه ثلاثة موتى ويجد طريقه", "n": "", "s": "t2"}, {"t": "Isekai Shokudou", "jp": "異世界食堂", "d": "مطعم ياباني يفتح باباً لعالم فانتازي", "n": "", "s": "t2"}, {"t": "Pluto", "jp": "PLUTO", "d": "من ناوكي أوراساوا صاحب مونستر — واجب إن أعجبك", "n": "", "s": "t3"}, {"t": "Chi. Chikyuu no Undou ni Tsuite", "jp": "チ。―地球の運動について―", "d": "عن من ضحّوا بحياتهم لأجل فكرة أن الأرض تدور", "n": "", "s": "t3"}, {"t": "Tengoku Daimakyou", "jp": "天国大魔境", "d": "ما بعد الكارثة ولغزان متوازيان", "n": "", "s": "t3"}, {"t": "Sonny Boy", "jp": "サニーボーイ", "d": "سريالي وتجريبي، ليس للجميع لكنه لا يُنسى", "n": "", "s": "t3"}, {"t": "Hikaru ga Shinda Natsu", "jp": "光が死んだ夏", "d": "رعب قروي هادئ وأجواء خانقة", "n": "", "s": "t3"}, {"t": "Yuru Camp", "jp": "ゆるキャン△", "d": "تخييم شتوي بلا أي توتر — مثالي لأيام الانتظار", "n": "", "s": "t3"}, {"t": "Non Non Biyori", "jp": "のんのんびより", "d": "هدوء ريفي خالص", "n": "", "s": "t3"}, {"t": "Koe no Katachi", "jp": "聲の形", "d": "فِلم من أعظم ما أُنتج، لكنه ثقيل عاطفياً", "n": "", "s": "t3"}, {"t": "Josee, the Tiger and the Fish", "jp": "ジョゼと虎と魚たち", "d": "فِلم برسم خلاب وقصة دافئة", "n": "", "s": "t3"}, {"t": "Mimi wo Sumaseba", "jp": "耳をすませば", "d": "غيبلي — عن الحب والكتابة والحلم", "n": "", "s": "t3"}, {"t": "Kimi to, Nami ni Noretara", "jp": "きみと、波にのれたら", "d": "رومانس وفقد وسريالية جميلة", "n": "", "s": "t3"}, {"t": "Watashi no Oshi wa Akuyaku Reijou", "jp": "私の推しは悪役令嬢。", "d": "من عائلة بطلة ذكية في عالم فانتازي", "n": "", "s": "t3"}, {"t": "Isekai Nonbiri Nouka", "jp": "異世界のんびり農家", "d": "إيسيكاي هادئ بلا توتر، للاسترخاء", "n": "", "s": "t3"}];
 const KEY='animeTracker.v3';
+const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* ===== استبعاد دائم — مبني في التطبيق، ما فيه زر يلغيه ===== */
 const BLOCK=['yaoi','yuri',"boys' love",'boys love','boys-love',"girls' love",'girls love','girls-love',
   'shounen ai','shounen-ai','shoujo ai','shoujo-ai','hentai','erotica'];
@@ -185,8 +208,78 @@ const fresh=()=>({items:SEED.map((x,i)=>Object.assign({id:'s'+i,cover:'',rate:0,
 let store=null;
 try{const r=localStorage.getItem(KEY); if(r) store=JSON.parse(r);}catch(e){}
 if(!store||!store.items) store=fresh();
-function save(){ try{localStorage.setItem(KEY,JSON.stringify(store));}
-  catch(e){ msg.textContent='تعذّر الحفظ التلقائي — استخدم «تصدير».'; } }
+const SNAPKEY='animeTracker.snaps', GHKEY='animeTracker.gh';
+let gh={token:'',gist:'',last:0};
+try{const r=localStorage.getItem(GHKEY); if(r) gh=Object.assign(gh,JSON.parse(r));}catch(e){}
+const ghSave=()=>{ try{localStorage.setItem(GHKEY,JSON.stringify(gh));}catch(e){} };
+
+/* ---- لقطات محلية دوّارة ---- */
+function snaps(){ try{return JSON.parse(localStorage.getItem(SNAPKEY))||[];}catch(e){return[];} }
+function snapshot(label){
+  try{
+    const arr=snaps(), today=new Date().toISOString().slice(0,10);
+    if(!label && arr.some(x=>x.day===today && x.label==='يومية')) return;
+    arr.unshift({at:Date.now(), day:today, label:label||'يومية',
+                 n:store.items.length, data:JSON.stringify(store)});
+    const keep=[], seen=new Set();
+    for(const x of arr){ const k=x.label==='يومية'?('d'+x.day):('m'+x.at);
+      if(!seen.has(k)){ seen.add(k); keep.push(x); } }
+    localStorage.setItem(SNAPKEY,JSON.stringify(keep.slice(0,10)));
+  }catch(e){}
+}
+function save(opt){
+  store.savedAt=Date.now();
+  try{ localStorage.setItem(KEY,JSON.stringify(store)); snapshot(); }
+  catch(e){ msg.textContent='تعذّر الحفظ التلقائي — استخدم «تصدير».'; }
+  if(!(opt&&opt.nosync)) pushSoon();
+}
+
+/* ---- مزامنة GitHub Gist ---- */
+const GHF='anime-tracker.json';
+let pushT=null;
+function ghStatus(t,cls){ const e=document.getElementById('syncDot'); if(!e) return;
+  e.textContent=t; e.className='dot '+(cls||''); }
+function pushSoon(){
+  if(!gh.token||!gh.gist) return;
+  clearTimeout(pushT); ghStatus('… جارٍ الحفظ','w');
+  pushT=setTimeout(pushNow,2500);
+}
+async function ghFetch(url,opt){
+  opt=opt||{}; opt.headers=Object.assign({'Accept':'application/vnd.github+json',
+    'Authorization':'Bearer '+gh.token},opt.headers||{});
+  const r=await fetch(url,opt);
+  if(!r.ok) throw new Error('GitHub '+r.status);
+  return r.json();
+}
+async function pushNow(){
+  if(!gh.token||!gh.gist) return;
+  try{
+    await ghFetch('https://api.github.com/gists/'+gh.gist,{method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({files:{[GHF]:{content:JSON.stringify(store)}}})});
+    gh.last=Date.now(); ghSave(); ghStatus('متزامن \u2713','ok');
+  }catch(e){ ghStatus('تعذّرت المزامنة','bad'); }
+}
+async function pullNow(silent){
+  if(!gh.token||!gh.gist) return;
+  ghStatus('… جارٍ السحب','w');
+  try{
+    const j=await ghFetch('https://api.github.com/gists/'+gh.gist);
+    const f=j.files&&j.files[GHF];
+    if(!f){ ghStatus('ما فيه نسخة بعد','w'); return; }
+    let txt=f.content;
+    if(f.truncated&&f.raw_url) txt=await (await fetch(f.raw_url)).text();
+    const rem=JSON.parse(txt);
+    if(!rem||!rem.items) throw new Error('bad');
+    const mine=store.savedAt||0, theirs=rem.savedAt||0;
+    if(theirs>mine){
+      snapshot('قبل السحب');
+      store=rem; save({nosync:1}); draw();
+      ghStatus('سُحبت نسخة أحدث \u2713','ok');
+    } else if(mine>theirs){ await pushNow(); }
+    else ghStatus('متزامن \u2713','ok');
+  }catch(e){ ghStatus('تعذّر السحب','bad'); }
+}
 
 let filter='all', query='', sortBy='def';
 const root=document.getElementById('root'), tabs=document.getElementById('tabs'),
@@ -234,10 +327,10 @@ function card(it){
   const opts=STATUS.map(s=>'<option value="'+s[0]+'"'+(s[0]===it.s?' selected':'')+'>'+s[1]+'</option>').join('');
   const link=it.alid?'<a href="https://anilist.co/anime/'+it.alid+'" target="_blank" title="افتح الصفحة">&#8599;</a>':'';
   c.innerHTML='<div class="tools">'+link+'<button class="x" title="حذف">&times;</button></div>'+
-    (it.cover?'<img class="cv" src="'+it.cover+'">':'<div class="ph">'+it.t+'</div>')+
-    '<div class="b"><div class="ti">'+it.t+'</div>'+
+    (it.cover?'<img class="cv" src="'+esc(it.cover)+'">':'<div class="ph">'+esc(it.t)+'</div>')+
+    '<div class="b"><div class="ti">'+esc(it.t)+'</div>'+
     ((it.year||it.eps)?'<div class="meta">'+[it.year||'',it.eps?it.eps+' حلقة':''].filter(Boolean).join(' \u00b7 ')+'</div>':'')+
-    '<div class="de">'+(it.d||'')+'</div>'+(it.n?'<div class="nt">'+it.n+'</div>':'')+'</div>';
+    '<div class="de">'+esc(it.d)+'</div>'+(it.n?'<div class="nt">'+esc(it.n)+'</div>':'')+'</div>';
   const cv=c.querySelector('.cv'), ph=c.querySelector('.ph');
   if(ph){ ph.title='اضغط لإصلاح الغلاف'; ph.onclick=()=>openFix(it); }
   if(cv){ cv.title='اضغط لتغيير الغلاف'; cv.onclick=()=>openFix(it);
@@ -339,9 +432,9 @@ document.getElementById('btnPick').onclick=()=>{
   if(!pool.length){ box.style.display='none'; return; }
   const p=pool[Math.floor(Math.random()*pool.length)];
   box.style.display='block';
-  box.innerHTML=(p.cover?'<img src="'+p.cover+'">':'')+
-    '<div style="font-weight:700">'+p.t+'</div>'+
-    '<div style="font-size:.78rem;color:#666;margin-top:4px">'+(p.d||'')+'</div>'+
+  box.innerHTML=(p.cover?'<img src="'+esc(p.cover)+'">':'')+
+    '<div style="font-weight:700">'+esc(p.t)+'</div>'+
+    '<div style="font-size:.78rem;color:#666;margin-top:4px">'+esc(p.d)+'</div>'+
     '<div style="font-size:.72rem;color:#16a085;margin-top:6px">'+SMAP[p.s][1]+'</div>';
 };
 
@@ -365,8 +458,8 @@ async function search(){
     list.forEach(m=>{
       const name=m.title.english||m.title.romaji;
       const d=document.createElement('div'); d.className='r';
-      d.innerHTML=(m.coverImage?'<img src="'+m.coverImage.large+'">':'')+
-        '<span>'+name+(m.seasonYear?' ('+m.seasonYear+')':'')+'</span>';
+      d.innerHTML=(m.coverImage?'<img src="'+esc(m.coverImage.large)+'">':'')+
+        '<span>'+esc(name)+(m.seasonYear?' ('+m.seasonYear+')':'')+'</span>';
       d.onclick=()=>{
         if(store.items.some(x=>x.alid===m.id||x.t===name)){msg.textContent='موجود عندك أصلاً';return;}
         store.items.unshift({id:'u'+Date.now(),t:name,jp:m.title.native||name,
@@ -569,8 +662,8 @@ function showFixRes(list,src){
   fixRes.innerHTML='';
   list.forEach(m=>{
     const d=document.createElement('div'); d.className='r';
-    d.innerHTML=(m.img?'<img src="'+m.img+'">':'<div style="height:84px;background:#eceaf7;border-radius:5px"></div>')+
-      '<span>'+m.name+(m.year?' ('+m.year+')':'')+'</span>';
+    d.innerHTML=(m.img?'<img src="'+esc(m.img)+'">':'<div style="height:84px;background:#eceaf7;border-radius:5px"></div>')+
+      '<span>'+esc(m.name)+(m.year?' ('+m.year+')':'')+'</span>';
     d.onclick=()=>{ if(!m.img){ fixMsg.textContent='هذه النتيجة بلا صورة — جرّب غيرها'; return; }
                     applyCover(m.img,m.extra); };
     fixRes.appendChild(d);
@@ -670,8 +763,8 @@ function renderUp(){
   } else rows.forEach(m=>{
     const it=byId[m.id], st=SMAP[it.s]||['','',''], cov=it.cover||(m.coverImage&&m.coverImage.medium)||'';
     h+='<div class="up" data-at="'+m.nextAiringEpisode.airingAt+'">'+
-      (cov?'<img src="'+cov+'">':'')+
-      '<div><div class="t">'+it.t+'</div><div class="e">الحلقة '+m.nextAiringEpisode.episode+
+      (cov?'<img src="'+esc(cov)+'">':'')+
+      '<div><div class="t">'+esc(it.t)+'</div><div class="e">الحلقة '+(+m.nextAiringEpisode.episode)+
       ' · '+AR_DT.format(new Date(m.nextAiringEpisode.airingAt*1000))+
       '<span class="tag" style="background:'+st[2]+'">'+st[1]+'</span></div></div>'+
       '<div class="cd"></div></div>';
@@ -688,6 +781,80 @@ function renderUp(){
   };
   tick(); upTimer=setInterval(tick,1000);
 }
+
+/* ================= لوحة المزامنة ================= */
+const ov2=document.getElementById('ov2');
+document.getElementById('syncClose').onclick=()=>ov2.classList.remove('on');
+ov2.onclick=e=>{ if(e.target===ov2) ov2.classList.remove('on'); };
+document.getElementById('btnSync').onclick=()=>{ ov2.classList.add('on'); drawGh(); drawSnaps(); };
+
+const fmtWhen=t=>new Intl.DateTimeFormat('ar',{day:'numeric',month:'short',hour:'numeric',
+  minute:'2-digit',hour12:true,timeZone:'Asia/Riyadh',calendar:'gregory',numberingSystem:'latn'}).format(new Date(t));
+
+function drawGh(){
+  const b=document.getElementById('ghBox');
+  if(!gh.token||!gh.gist){
+    b.innerHTML='<div class="row"><input id="ghTok" type="password" placeholder="ألصق التوكن هنا…" style="flex:1;min-width:170px">'+
+      '<button id="ghGo">اربط</button></div>'+
+      '<div class="row" style="margin-top:8px"><input id="ghId" placeholder="أو معرّف Gist موجود (للجهاز الثاني)…" style="flex:1;min-width:170px"></div>'+
+      '<div id="ghMsg" style="font-size:.76rem;color:#6c63c9;margin-top:8px;min-height:16px"></div>';
+    document.getElementById('ghGo').onclick=ghConnect;
+    return;
+  }
+  b.innerHTML='<div style="font-size:.8rem;line-height:1.9">مربوط \u2713<br>'+
+    '<span style="color:#888">معرّف الـ Gist:</span> <code style="direction:ltr;display:inline-block">'+esc(gh.gist)+'</code><br>'+
+    '<span style="color:#888">آخر مزامنة:</span> '+(gh.last?fmtWhen(gh.last):'—')+'</div>'+
+    '<div class="row" style="margin-top:9px"><button id="ghPush">ارفع الآن</button>'+
+    '<button class="g" id="ghPull">اسحب الآن</button>'+
+    '<button class="g" id="ghOut">افصل</button></div>'+
+    '<div id="ghMsg" style="font-size:.76rem;color:#6c63c9;margin-top:8px;min-height:16px"></div>';
+  document.getElementById('ghPush').onclick=async()=>{ await pushNow(); drawGh(); };
+  document.getElementById('ghPull').onclick=async()=>{ await pullNow(); drawGh(); };
+  document.getElementById('ghOut').onclick=()=>{
+    if(!confirm('فصل الربط يمسح التوكن من هذا الجهاز فقط. النسخة على GitHub تبقى.')) return;
+    gh={token:'',gist:'',last:0}; ghSave(); ghStatus('غير مربوط',''); drawGh();
+  };
+}
+async function ghConnect(){
+  const tok=document.getElementById('ghTok').value.trim();
+  const gid=document.getElementById('ghId').value.trim();
+  const m=document.getElementById('ghMsg');
+  if(!tok){ m.textContent='التوكن مطلوب'; return; }
+  m.textContent='جارٍ التحقق…'; gh.token=tok;
+  try{
+    if(gid){
+      gh.gist=gid;
+      const j=await ghFetch('https://api.github.com/gists/'+gid);
+      if(!j.files||!j.files[GHF]) throw new Error('ملف غير موجود في هذا الـ Gist');
+      ghSave(); drawGh(); await pullNow();
+    } else {
+      const j=await ghFetch('https://api.github.com/gists',{method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({description:'Anime tracker backup',public:false,
+          files:{[GHF]:{content:JSON.stringify(store)}}})});
+      gh.gist=j.id; gh.last=Date.now(); ghSave(); ghStatus('متزامن \u2713','ok'); drawGh();
+    }
+  }catch(e){ gh.token=''; m.textContent='فشل الربط: '+e.message+' — تأكد أن التوكن من نوع classic وفيه صلاحية gist.'; }
+}
+function drawSnaps(){
+  const el=document.getElementById('snapList'), arr=snaps();
+  if(!arr.length){ el.innerHTML='<div style="font-size:.78rem;color:#888">ما فيه لقطات بعد.</div>'; return; }
+  el.innerHTML='';
+  arr.forEach((sp,i)=>{
+    const d=document.createElement('div'); d.className='snap';
+    d.innerHTML='<b>'+esc(sp.label)+'</b><span class="when">'+fmtWhen(sp.at)+'</span>'+
+      '<span style="color:#888">'+sp.n+' عنصر</span>';
+    const btn=document.createElement('button'); btn.textContent='استرجاع';
+    btn.onclick=()=>{
+      if(!confirm('استرجاع هذه اللقطة يستبدل بياناتك الحالية. تُؤخذ لقطة للحالة الحالية قبلها.')) return;
+      snapshot('قبل الاسترجاع');
+      try{ store=JSON.parse(sp.data); }catch(e){ return; }
+      save(); draw(); ov2.classList.remove('on');
+    };
+    d.appendChild(btn); el.appendChild(d);
+  });
+}
+if(gh.token&&gh.gist){ ghStatus('… جارٍ السحب','w'); pullNow(true); }
 
 document.getElementById('btnExp').onclick=()=>{
   const b=new Blob([JSON.stringify(store,null,1)],{type:'application/json'});
