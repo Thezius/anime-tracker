@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>متتبّع الأنمي</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{font-family:'Tajawal',sans-serif;direction:rtl;background:#f4f4f7;color:#1c1c1e;margin:0;padding:18px 14px 70px}
+.wrap{max-width:1250px;margin:0 auto}
+h1{text-align:center;color:#2b2b6f;margin:6px 0 2px;font-size:1.75rem}
+.sub{text-align:center;color:#888;font-size:.8rem;margin-bottom:14px}
+.stats{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+.stat{background:#fff;border-radius:10px;padding:7px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06);text-align:center}
+.stat b{display:block;color:#2b2b6f;font-size:1.05rem}
+.stat span{font-size:.68rem;color:#888}
+.bar{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:16px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input,select,button,textarea{font-family:inherit;font-size:.85rem;border-radius:8px;border:1px solid #d8d8e2;
+ padding:8px 11px;background:#fff;color:#1c1c1e}
+button{cursor:pointer;background:#2b2b6f;color:#fff;border:none;font-weight:500}
+button.g{background:#eceaf7;color:#2b2b6f}
+button:hover{opacity:.88}
+#q{flex:1;min-width:160px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.tab{padding:5px 12px;border-radius:20px;font-size:.77rem;cursor:pointer;background:#eceaf7;color:#444;user-select:none}
+.tab.on{color:#fff}
+.tab .c{opacity:.7;font-size:.7rem}
+h2{color:#fff;padding:7px 15px;border-radius:8px;margin:24px 0 12px;font-size:1.02rem;
+ display:flex;justify-content:space-between;align-items:center}
+h2 .n{font-size:.78rem;opacity:.85;font-weight:400}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:13px}
+.card{background:#fff;border-radius:11px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);
+ display:flex;flex-direction:column;position:relative}
+.card .ph{width:100%;aspect-ratio:2/3;background:linear-gradient(135deg,#e9e8f6,#d5d3ec);
+ display:flex;align-items:center;justify-content:center;color:#9a97c4;font-size:.68rem;padding:8px;text-align:center}
+.card img.cv{width:100%;aspect-ratio:2/3;object-fit:cover;display:block}
+.card .b{padding:8px 10px 10px;flex:1;display:flex;flex-direction:column}
+.card .ti{font-weight:700;font-size:.78rem;direction:ltr;text-align:right;line-height:1.35;margin-bottom:3px}
+.card .meta{font-size:.65rem;color:#999;margin-bottom:4px}
+.card .de{font-size:.7rem;color:#555;line-height:1.5;flex:1}
+.card .nt{font-size:.65rem;color:#6c63c9;margin-top:5px}
+.stars{margin-top:7px;font-size:1.02rem;letter-spacing:1px;color:#dcdce6;user-select:none;direction:ltr;text-align:right}
+.stars b{cursor:pointer;font-weight:400}
+.stars b.on{color:#f0a500}
+.card select{width:100%;margin-top:6px;font-size:.72rem;padding:5px 7px}
+.card textarea{width:100%;margin-top:5px;font-size:.7rem;padding:5px 7px;resize:vertical;min-height:30px}
+.prog{display:flex;gap:4px;align-items:center;margin-top:5px;font-size:.7rem;color:#666}
+.prog input{width:46px;padding:3px 5px;font-size:.7rem;text-align:center}
+.tools{position:absolute;top:6px;left:6px;display:none;gap:4px}
+.card:hover .tools{display:flex}
+.tools a,.tools button{background:rgba(0,0,0,.58);color:#fff;border:none;border-radius:50%;
+ width:23px;height:23px;font-size:.78rem;line-height:23px;text-align:center;cursor:pointer;
+ text-decoration:none;padding:0;display:block}
+#res{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:9px}
+#res .r{background:#fafaff;border:1px solid #e4e3f0;border-radius:9px;padding:7px;cursor:pointer;text-align:center}
+#res .r:hover{border-color:#6c63c9}
+#res .r img{width:100%;border-radius:5px;margin-bottom:5px}
+#res .r span{font-size:.69rem;display:block;line-height:1.3}
+#msg{font-size:.79rem;color:#6c63c9;margin-top:8px;min-height:18px}
+.empty{text-align:center;color:#aaa;padding:30px;font-size:.85rem}
+#pick{background:#fff;border-radius:12px;padding:14px;margin-bottom:16px;display:none;
+ box-shadow:0 1px 4px rgba(0,0,0,.07);text-align:center}
+#pick img{width:118px;border-radius:9px;display:block;margin:0 auto 8px}
+.card .ph,.card img.cv{cursor:pointer}
+#ov{position:fixed;inset:0;background:rgba(20,20,40,.55);display:none;z-index:50;
+ align-items:flex-start;justify-content:center;padding:26px 12px;overflow:auto}
+#ov.on{display:flex}
+.modal{background:#fff;border-radius:14px;padding:16px;max-width:620px;width:100%;
+ box-shadow:0 8px 30px rgba(0,0,0,.28)}
+.modal h3{margin:0 0 3px;font-size:1rem;color:#2b2b6f}
+.modal .hint{font-size:.73rem;color:#888;margin-bottom:11px;direction:ltr;text-align:right}
+#fixRes{margin-top:11px;display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:9px}
+#fixRes .r{background:#fafaff;border:1px solid #e4e3f0;border-radius:9px;padding:6px;cursor:pointer;text-align:center}
+#fixRes .r:hover{border-color:#6c63c9}
+#fixRes .r img{width:100%;border-radius:5px;margin-bottom:4px}
+#fixRes .r span{font-size:.66rem;display:block;line-height:1.3}
+#fixMsg{font-size:.77rem;color:#6c63c9;margin-top:9px;min-height:17px}
+#upBox{background:#fff;border-radius:12px;padding:13px 15px;margin-bottom:16px;display:none;
+ box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.up{display:flex;gap:10px;align-items:center;padding:9px 2px;border-bottom:1px solid #f1f1f6}
+.up:last-child{border-bottom:none}
+.up img{width:42px;border-radius:6px;flex-shrink:0}
+.up .t{font-weight:700;font-size:.79rem;direction:ltr;text-align:right;line-height:1.3}
+.up .e{font-size:.71rem;color:#777;margin-top:3px}
+.up .tag{font-size:.61rem;padding:1px 7px;border-radius:9px;color:#fff;margin-right:4px}
+.up .cd{margin-right:auto;direction:ltr;font-weight:700;color:#2b2b6f;font-size:.87rem;white-space:nowrap}
+.up .cd.soon{color:#c0392b}
+@media print{body{background:#fff;padding:0}.bar,.tabs,.stats,#pick,#upBox,#ov,.card select,.card textarea,.tools,.prog{display:none!important}
+ .card{box-shadow:none;border:1px solid #e3e3ea}}
+</style></head><body><div class="wrap">
+<h1>متتبّع الأنمي</h1>
+<div class="sub">التعديلات تُحفظ في متصفحك تلقائياً — استخدم «تصدير» لأخذ نسخة احتياطية<br>
+<span style="font-size:.72rem;color:#aaa">استبعاد دائم من كل البحث والترشيحات: ياوي · يوري · BL · GL · هنتاي</span></div>
+<div class="stats" id="stats"></div>
+
+<div class="bar">
+  <div class="row">
+    <input id="q" placeholder="ابحث في قائمتك…">
+    <select id="sort">
+      <option value="def">الترتيب الافتراضي</option>
+      <option value="rate">الأعلى تقييماً</option>
+      <option value="az">أبجدياً</option>
+      <option value="year">الأحدث</option>
+    </select>
+    <button class="g" id="btnAdd">+ إضافة</button>
+    <button class="g" id="btnSync">استيراد من موقع</button>
+    <button class="g" id="btnPick">شوف وش أشوف</button>
+    <button class="g" id="btnUp">الحلقات القادمة</button>
+    <button class="g" id="btnExp">تصدير</button>
+    <button class="g" id="btnImp">استيراد</button>
+    <button class="g" id="btnReset">تصفير</button>
+    <input type="file" id="file" accept=".json" style="display:none">
+  </div>
+  <div id="addBox" style="display:none;margin-top:10px">
+    <div class="row">
+      <input id="sq" placeholder="اسم الأنمي بالإنجليزي أو الياباني…">
+      <select id="ss"></select>
+      <button id="btnGo">ابحث</button>
+    </div>
+    <div id="msg"></div>
+    <div id="res"></div>
+  </div>
+
+  <div id="syncBox" style="display:none;margin-top:10px">
+    <div style="font-size:.8rem;color:#666;margin-bottom:8px">
+      يدمج قائمتك الخارجية مع الموجود: يحدّث التقييم والتقدّم، ويضيف الجديد.
+    </div>
+    <div class="row" style="margin-bottom:8px">
+      <input id="alUser" placeholder="اسم مستخدمك في AniList" style="flex:1;min-width:150px">
+      <button id="btnAL">اسحب من AniList</button>
+    </div>
+    <div class="row" style="margin-bottom:8px">
+      <button class="g" id="btnMAL">ارفع ملف MyAnimeList (‎.xml أو ‎.xml.gz)</button>
+      <input type="file" id="malFile" accept=".xml,.gz" style="display:none">
+      <button class="g" id="btnCSV">ارفع ملف Simkl أو CSV</button>
+      <input type="file" id="csvFile" accept=".csv,.txt" style="display:none">
+    </div>
+    <label style="font-size:.78rem;color:#555;display:block">
+      <input type="checkbox" id="ovr" style="width:auto;padding:0;margin-left:5px">
+      اجعل حالات الموقع تحلّ محل حالاتي الحالية
+    </label>
+    <div id="smsg" style="font-size:.79rem;color:#6c63c9;margin-top:8px;min-height:18px"></div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+</div>
+
+<div id="upBox"></div>
+<div id="pick"></div>
+<div id="root"></div></div>
+
+<div id="ov"><div class="modal">
+  <h3>إصلاح الغلاف</h3>
+  <div class="hint" id="fixFor"></div>
+  <div class="row">
+    <input id="fixQ" placeholder="اسم العمل — لاتيني أو ياباني…" style="flex:1;min-width:150px">
+    <button id="fixAL">ابحث في AniList</button>
+    <button class="g" id="fixMAL">ابحث في MyAnimeList</button>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <input id="fixUrl" placeholder="أو الصق رابط صورة مباشر…" style="flex:1;min-width:150px">
+    <button class="g" id="fixUrlGo">استخدم الرابط</button>
+  </div>
+  <div id="fixMsg"></div>
+  <div id="fixRes"></div>
+  <div class="row" style="margin-top:13px;justify-content:space-between">
+    <button class="g" id="fixAuto">أعد المحاولة تلقائياً</button>
+    <button class="g" id="fixClose">إغلاق</button>
+  </div>
+</div></div>
+<script>
+const STATUS = [["watching", "أتابعه حالياً", "#e67e22"], ["loved", "عشقته", "#c0392b"], ["liked", "أعجبني", "#d68910"], ["watched", "شاهدته", "#5d6d7e"], ["paused", "موقوف", "#2980b9"], ["dropped", "لم يعجبني", "#7f8c8d"], ["plan", "قائمة الانتظار", "#16a085"], ["t1", "أنصح به بشدة", "#8e44ad"], ["t2", "ترشيح قوي", "#6c63c9"], ["t3", "ترشيح خفيف", "#95a5a6"]];
+const SEED = [{"t": "Frieren", "jp": "葬送のフリーレン", "d": "رحلة إلفية بعد انتهاء المغامرة، عن الزمن والفقد بإيقاع هادئ", "n": "من مفضلاتك", "s": "loved"}, {"t": "The Apothecary Diaries", "jp": "薬屋のひとりごと", "d": "صيدلانية ذكية تحلّ ألغاز القصر الإمبراطوري، ورومانس بطيء الاشتعال", "n": "من مفضلاتك", "s": "loved"}, {"t": "Oregairu", "jp": "やはり俺の青春ラブコメはまちがっている。", "d": "بطل ساخر منعزل ونادي المساعدة، وأنضج كتابة عن العلاقات الإنسانية", "n": "عشق", "s": "loved"}, {"t": "Toradora!", "jp": "とらドラ!", "d": "كلاسيكية الرومانس المدرسي، نضج عاطفي يفوق عمرها", "n": "عشق", "s": "loved"}, {"t": "Ore Monogatari!!", "jp": "俺物語!!", "d": "شاب ضخم مخيف وقلبه ذهب، والرومانس يتقدم بلا مماطلة", "n": "عشق", "s": "loved"}, {"t": "Barakamon", "jp": "ばらかもん", "d": "خطاط يُنفى لجزيرة صغيرة ويعيد اكتشاف نفسه", "n": "عشق", "s": "loved"}, {"t": "Gekkan Shoujo Nozaki-kun", "jp": "月刊少女野崎くん", "d": "اعتراف يُساء فهمه فتصير مساعدة رسّام شوجو", "n": "عشق", "s": "loved"}, {"t": "Dandadan", "jp": "ダンダダン", "d": "أشباح وفضائيون ورومانس مراهق بإنتاج بصري مجنون", "n": "عشق", "s": "loved"}, {"t": "Delicious in Dungeon", "jp": "ダンジョン飯", "d": "طبخ الوحوش في زنزانة، وبناء عالم من أذكى ما أُنتج", "n": "عشق", "s": "loved"}, {"t": "Cross Game", "jp": "クロスゲーム", "d": "بيسبول وفقد ورومانس صامت، من أداتشي ميتسورو", "n": "عشق", "s": "loved"}, {"t": "Silver Spoon", "jp": "銀の匙", "d": "مدرسة زراعية وشاب تائه، من كاتبة الخيميائي المعدني", "n": "عشق", "s": "loved"}, {"t": "Takopi's Original Sin", "jp": "タコピーの原罪", "d": "قصير جداً وموجع جداً عن الطفولة والقسوة", "n": "عشق", "s": "loved"}, {"t": "Your Lie in April", "jp": "四月は君の嘘", "d": "موسيقى ورومانس وفقد، بجمالية بصرية عالية", "n": "صفّقت للنهاية", "s": "loved"}, {"t": "Anohana", "jp": "あの日見た花の名前を僕達はまだ知らない。", "d": "خمسة أصدقاء وشبح صديقتهم، إحدى عشرة حلقة تكسر القلب", "n": "تحبه", "s": "loved"}, {"t": "Ao no Hako", "jp": "アオのハコ", "d": "رياضة ورومانس مدرسي بإنتاج ناعم", "n": "أعجبك كثيراً", "s": "loved"}, {"t": "Sakurasou no Pet na Kanojo", "jp": "さくら荘のペットな彼女", "d": "سكن الموهوبين، والفجوة بين الموهبة والاجتهاد", "n": "تحبه، جوّه حلو", "s": "loved"}, {"t": "Golden Time", "jp": "ゴールデンタイム", "d": "جامعة وفقدان ذاكرة، من كاتبة تورادورا", "n": "ممتاز", "s": "liked"}, {"t": "Kokoro Connect", "jp": "ココロコネクト", "d": "خمسة أصدقاء يتبادلون الأجساد وتنكشف أسرارهم", "n": "ممتاز", "s": "liked"}, {"t": "ReLIFE", "jp": "ReLIFE", "d": "ثلاثيني فاشل يعود للثانوية بجسد مراهق", "n": "ممتاز", "s": "liked"}, {"t": "Isekai Ojisan", "jp": "異世界おじさん", "d": "عائد من عالم آخر بعد سبعة عشر عاماً، كوميديا ساخرة", "n": "ممتاز", "s": "liked"}, {"t": "Tomo-chan wa Onnanoko!", "jp": "トモちゃんは女の子!", "d": "مسترجلة تحب صديق طفولتها الذي يراها واحداً من الشباب", "n": "أعجبك", "s": "liked"}, {"t": "Chuunibyou demo Koi ga Shitai!", "jp": "中二病でも恋がしたい!", "d": "مراهقون لم يتجاوزوا مرحلة التوهّم، كوميديا ثم وجع", "n": "أعجبك", "s": "liked"}, {"t": "Ao Haru Ride", "jp": "アオハライド", "d": "لقاء بعد سنين وقد تغيّر كلاهما", "n": "حلو", "s": "liked"}, {"t": "Akatsuki no Yona", "jp": "暁のヨナ", "d": "أميرة تفقد كل شيء وتبني نفسها من الصفر", "n": "حلو", "s": "liked"}, {"t": "Tonari no Kaibutsu-kun", "jp": "となりの怪物くん", "d": "مهووسة بالدراسة وولد عنيف غريب الأطوار", "n": "حلو", "s": "liked"}, {"t": "Grand Blue", "jp": "ぐらんぶる", "d": "جامعة ونادي غوص، ومن أضحك ما أُنتج", "n": "حلو", "s": "liked"}, {"t": "Danshi Koukousei no Nichijou", "jp": "男子高校生の日常", "d": "كوميديا عبثية بروح نيتشيجو", "n": "أعجبك", "s": "liked"}, {"t": "Hataraku Maou-sama!", "jp": "はたらく魔王さま!", "d": "ملك الشياطين يعمل في مطعم وجبات سريعة", "n": "أعجبك", "s": "liked"}, {"t": "Otonari no Tenshi-sama", "jp": "お隣の天使様にいつの間にか駄目人間にされていた件", "d": "جارة مثالية وعلاقة تُبنى بتفاصيل يومية", "n": "لا بأس به", "s": "liked"}, {"t": "Plastic Memories", "jp": "Plastic Memories", "d": "روبوتات لها تاريخ انتهاء صلاحية", "n": "شاهدته", "s": "liked"}, {"t": "Steins;Gate", "jp": "STEINS;GATE", "d": "الأب الروحي للحلقات الزمنية", "n": "", "s": "watched"}, {"t": "Higurashi no Naku Koro ni", "jp": "ひぐらしのなく頃に", "d": "قرية وحلقة زمنية ورعب نفسي", "n": "", "s": "watched"}, {"t": "Puella Magi Madoka Magica", "jp": "魔法少女まどか☆マギカ", "d": "تفكيك كامل لنوع الفتيات الساحرات", "n": "", "s": "watched"}, {"t": "Boku dake ga Inai Machi", "jp": "僕だけがいない街", "d": "قفزة للطفولة لمنع جريمة", "n": "", "s": "watched"}, {"t": "Made in Abyss", "jp": "メイドインアビス", "d": "هاوية سحيقة، جمال خلاب ووحشية مفاجئة", "n": "", "s": "watched"}, {"t": "Mushoku Tensei", "jp": "無職転生", "d": "أفضل إنتاج بصري في الإيسيكاي", "n": "", "s": "watched"}, {"t": "Monster", "jp": "MONSTER", "d": "تشويق نفسي بلا سحر ولا قدرات", "n": "", "s": "watched"}, {"t": "Vinland Saga", "jp": "ヴィンランド・サガ", "d": "انتقام ينقلب إلى شيء آخر تماماً", "n": "", "s": "watched"}, {"t": "86 Eighty-Six", "jp": "86-エイティシックス-", "d": "حرب وطبقية وعلاقة عبر الراديو", "n": "", "s": "watched"}, {"t": "Kaguya-sama wa Kokurasetai", "jp": "かぐや様は告らせたい", "d": "حرب نفسية رومانسية كوميدية", "n": "", "s": "watched"}, {"t": "Horimiya", "jp": "ホリミヤ", "d": "قرأته مانجا — العلاقة تكبر بعد الاعتراف", "n": "", "s": "watched"}, {"t": "Sono Bisque Doll wa Koi wo Suru", "jp": "その着せ替え人形は恋をする", "d": "كوسبلاي وشغف بهواية", "n": "", "s": "watched"}, {"t": "Kaoru Hana wa Rin to Saku", "jp": "薫る花は凛と咲く", "d": "فجوة بين مدرستين متضادتين", "n": "", "s": "watched"}, {"t": "Hyouka", "jp": "氷菓", "d": "ألغاز صغيرة ورومانس صامت", "n": "", "s": "watched"}, {"t": "Karakai Jouzu no Takagi-san", "jp": "からかい上手の高木さん", "d": "مناكفة يومية تتحول إلى حب", "n": "", "s": "watched"}, {"t": "Make Heroine ga Oosugiru!", "jp": "負けヒロインが多すぎる!", "d": "عن البنات اللاتي يخسرن في قصص الحب", "n": "", "s": "watched"}, {"t": "Blue Period", "jp": "ブルーピリオド", "d": "الرسم كطريق، والعذاب الذي فيه", "n": "", "s": "watched"}, {"t": "Tada-kun wa Koi wo Shinai", "jp": "多田くんは恋をしない", "d": "تصوير فوتوغرافي وأميرة أجنبية", "n": "", "s": "watched"}, {"t": "Komi-san wa Komyushou desu", "jp": "古見さんは、コミュ症です。", "d": "فتاة عاجزة عن الكلام وولد عادي يساعدها", "n": "", "s": "watched"}, {"t": "Bocchi the Rock!", "jp": "ぼっち・ざ・ろっく!", "d": "القلق الاجتماعي وفرقة روك", "n": "", "s": "watched"}, {"t": "Youjo Senki", "jp": "幼女戦記", "d": "إيسيكاي عسكري وسياسي", "n": "", "s": "watched"}, {"t": "Akagami no Shirayukihime", "jp": "赤髪の白雪姫", "d": "عشّابة وأمير، رومانس متدرج دافئ", "n": "", "s": "watched"}, {"t": "Ranma ½", "jp": "らんま1/2", "d": "كوميديا رومانسية كلاسيكية", "n": "", "s": "watched"}, {"t": "Mahoutsukai no Yome", "jp": "魔法使いの嫁", "d": "فتاة تُباع لساحر غير بشري", "n": "", "s": "watched"}, {"t": "Log Horizon", "jp": "ログ・ホライズン", "d": "إيسيكاي مبني على السياسة وبناء المجتمع", "n": "", "s": "watched"}, {"t": "Asobi Asobase", "jp": "あそびあそばせ", "d": "كوميديا وحشية ومريضة ومضحكة", "n": "", "s": "watched"}, {"t": "Hinamatsuri", "jp": "ヒナまつり", "d": "ياكوزا يربي فتاة بقدرات خارقة", "n": "", "s": "watched"}, {"t": "Ookami Kodomo no Ame to Yuki", "jp": "おおかみこどもの雨と雪", "d": "فِلم عن أم تربي طفلين نصف ذئب", "n": "", "s": "watched"}, {"t": "Kotonoha no Niwa", "jp": "言の葉の庭", "d": "فِلم قصير برسم استثنائي", "n": "", "s": "watched"}, {"t": "Great Teacher Onizuka", "jp": "GTO", "d": "ياكوزا سابق يصير مدرّساً", "n": "", "s": "watched"}, {"t": "Nisekoi", "jp": "ニセコイ", "d": "مواعدة مزيفة بجمالية شافت", "n": "", "s": "watched"}, {"t": "Yamada-kun to 7-nin no Majo", "jp": "山田くんと7人の魔女", "d": "تبادل أجساد وأسرار مدرسية", "n": "", "s": "watched"}, {"t": "Kanojo, Okarishimasu", "jp": "彼女、お借りします", "d": "حبيبة بالإيجار، رأي المتابعين منقسم", "n": "", "s": "watched"}, {"t": "Spy x Family", "jp": "SPY×FAMILY", "d": "عائلة مزيفة، كوميديا وإنتاج فخم", "n": "", "s": "watched"}, {"t": "Sakamoto Days", "jp": "SAKAMOTO DAYS", "d": "قاتل سابق يدير بقالة", "n": "", "s": "watched"}, {"t": "Seishun Buta Yarou", "jp": "青春ブタ野郎はバニーガール先輩の夢を見ない", "d": "ألغاز نفسية ورومانس، الأقرب لروح أوريغايرو", "n": "الموسم الأول — بقيت الأفلام", "s": "paused"}, {"t": "Saiki Kusuo no Psi-nan", "jp": "斉木楠雄のΨ難", "d": "قدرات خارقة وكوميديا سريعة جداً", "n": "النصف", "s": "paused"}, {"t": "Mob Psycho 100", "jp": "モブサイコ100", "d": "كوميديا وأكشن ونمو شخصي، الموسم الثالث ذروته", "n": "لم تكمله", "s": "paused"}, {"t": "Charlotte", "jp": "Charlotte シャーロット", "d": "قدرات خارقة ورومانس ومنعطف حاد", "n": "قبل الانعطاف", "s": "paused"}, {"t": "Roshidere", "jp": "時々ボソッとロシア語でデレる隣のアーリャさん", "d": "زميلة روسية تغازله بلغتها ظناً أنه لا يفهم", "n": "النصف", "s": "paused"}, {"t": "Tsuki ga Kirei", "jp": "月がきれい", "d": "أصدق تصوير للحب الأول — ترشيح متكرر", "n": "الحلقة الأولى", "s": "paused"}, {"t": "Shouwa Genroku Rakugo Shinjuu", "jp": "昭和元禄落語心中", "d": "فن الراكوغو عبر أجيال — ابدأ من الحلقة الثانية", "n": "الحلقة الأولى", "s": "paused"}, {"t": "Tsuredure Children", "jp": "徒然チルドレン", "d": "حلقات قصيرة عن ثنائيات عالقة قبل الاعتراف", "n": "بدأته", "s": "paused"}, {"t": "Lovely Complex", "jp": "ラブ★コン", "d": "كوميديا رومانسية عن فرق الطول", "n": "حاولت مراراً ولم تكمله", "s": "dropped"}, {"t": "Shikimori's Not Just a Cutie", "jp": "可愛いだけじゃない式守さん", "d": "ثنائي من الحلقة الأولى بإنتاج راقٍ", "n": "لم يعجبك", "s": "dropped"}, {"t": "Gimai Seikatsu", "jp": "義妹生活", "d": "أخوان بالتبني يتعاملان بحذر ومسافة", "n": "أوقفته", "s": "dropped"}, {"t": "Sukitte Ii na yo", "jp": "好きっていいなよ。", "d": "أشهر ولد بالمدرسة وفتاة منعزلة", "n": "ممل نوعاً ما", "s": "dropped"}, {"t": "Fumetsu no Anata e", "jp": "不滅のあなたへ", "d": "كائن خالد يتعلم معنى الإنسانية", "n": "أوقفته — يجلب الاكتئاب", "s": "dropped"}, {"t": "Eternal Boys", "jp": "永久少年 Eternal Boys", "d": "رجال في منتصف العمر يشكّلون فرقة أيدول", "n": "أوقفته", "s": "dropped"}, {"t": "Clannad", "jp": "CLANNAD", "d": "عائلة وفقد ووجع طويل", "n": "رفضته", "s": "dropped"}, {"t": "Paradise Kiss", "jp": "パラダイス・キス", "d": "طلاب تصميم أزياء يبنون علامتهم", "n": "قديم بالنسبة لمزاجك", "s": "dropped"}, {"t": "Maison Ikkoku", "jp": "めぞん一刻", "d": "رومانس ناضج كلاسيكي", "n": "قديم — ربما لاحقاً", "s": "dropped"}, {"t": "Shinsekai yori", "jp": "新世界より", "d": "مجتمع مستقبلي تنكشف أسراره طبقة طبقة", "n": "ليس الآن", "s": "dropped"}, {"t": "Spice and Wolf", "jp": "狼と香辛料", "d": "تاجر وإلهة قمح، اقتصاد وحوار ورومانس بطيء — الأقرب لروح الصيدلانية", "n": "", "s": "plan"}, {"t": "Honzuki no Gekokujou", "jp": "本好きの下剋上", "d": "عاشقة كتب تولد في عالم بلا كتب فتصنع الورق من الصفر", "n": "", "s": "plan"}, {"t": "Ping Pong the Animation", "jp": "ピンポン THE ANIMATION", "d": "عن الموهبة والفشل والصداقة — تجاوز الرسم، وليس رومانساً", "n": "", "s": "plan"}, {"t": "Kono Oto Tomare!", "jp": "この音とまれ!", "d": "شاب سيّئ السمعة يدخل نادي الكوتو في مدرسة راقية", "n": "", "s": "plan"}, {"t": "3-gatsu no Lion", "jp": "3月のライオン", "d": "شوغي ووحدة، لكنه ينتهي بالدفء — علاج لا مرض", "n": "", "s": "plan"}, {"t": "Just Because!", "jp": "Just Because!", "d": "طلاب سنة أخيرة وقصص حب معلّقة قبل التخرج", "n": "", "s": "plan"}, {"t": "Kimi wa Houkago Insomnia", "jp": "君は放課後インソムニア", "d": "أرق ومرصد مدرسي — الأقرب لجو الصندوق الأزرق", "n": "", "s": "plan"}, {"t": "Ouran Koukou Host Club", "jp": "桜蘭高校ホスト部", "d": "سخرية من كليشيهات الشوجو أذكى مما جاء بعدها", "n": "", "s": "plan"}, {"t": "Nodame Cantabile", "jp": "のだめカンタービレ", "d": "موسيقى كلاسيكية وثنائي غريب، كوميدي وعميق", "n": "", "s": "plan"}, {"t": "Net-juu no Susume", "jp": "ネト充のススメ", "d": "موظفة ثلاثينية تستقيل وتلعب أونلاين", "n": "", "s": "plan"}, {"t": "Mushishi", "jp": "蟲師", "d": "حلقات منفصلة تأملية عن كائنات روحية", "n": "", "s": "plan"}, {"t": "Kage no Jitsuryokusha ni Naritakute!", "jp": "陰の実力者になりたくて!", "d": "يتقمص دور الشرير الغامض مزحةً فتصير تخيلاته حقيقة", "n": "", "s": "plan"}, {"t": "Aharen-san wa Hakarenai", "jp": "阿波連さんははかれない", "d": "كوميديا هادئة غريبة الأطوار", "n": "", "s": "plan"}, {"t": "Wistoria: Wand and Sword", "jp": "杖と剣のウィストリア", "d": "أكاديمية سحر وطالب يقاتل بالسيف", "n": "", "s": "plan"}, {"t": "Koi wa Sekai Seifuku no Ato de", "jp": "恋は世界征服のあとで", "d": "بطل خارق وشريرة يتواعدان سراً", "n": "", "s": "plan"}, {"t": "Kuragehime", "jp": "海月姫", "d": "أوتاكو منطويات والتحوّل عبر المظهر", "n": "", "s": "plan"}, {"t": "Vivy: Fluorite Eye's Song", "jp": "Vivy -Fluorite Eye's Song-", "d": "ذكاء اصطناعي يحاول تغيير المستقبل عبر مئة عام. من كتابة تابّي ناغاتسوكي، نفس كاتب ري زيرو، وبنفس هوسه بالثمن والتكرار والفشل", "n": "", "s": "t1"}, {"t": "Boku no Kokoro no Yabai Yatsu", "jp": "僕の心のヤバイやつ", "d": "يبدأ ككوميديا مراهقين ويطلع من أصدق ما كُتب عن الخجل — التوأم الروحي للصندوق الأزرق", "n": "", "s": "t1"}, {"t": "Summertime Render", "jp": "サマータイムレンダ", "d": "حلقة موت زمنية في جزيرة صغيرة، ولغز محكم البناء. الأقرب لآلية ري زيرو", "n": "", "s": "t1"}, {"t": "Odd Taxi", "jp": "オッドタクシー", "d": "لغز جنائي مبني على الحوار فقط، وخيوطه تتجمّع في النهاية", "n": "", "s": "t1"}, {"t": "Skip and Loafer", "jp": "スキップとローファー", "d": "رومانس مدرسي دافئ وذكي، وشخصياته مكتوبة بنضج غير معتاد", "n": "", "s": "t1"}, {"t": "Yubisaki to Renren", "jp": "ゆびさきと恋々", "d": "بطلة صمّاء وشاب يجيد اللغات، والتواصل مكتوب بحساسية عالية", "n": "", "s": "t1"}, {"t": "Sakamichi no Apollon", "jp": "坂道のアポロン", "d": "جاز وصداقة وحب من طرف واحد في ستينات اليابان", "n": "", "s": "t1"}, {"t": "Hibike! Euphonium", "jp": "響け!ユーフォニアム", "d": "فرقة موسيقية مدرسية، وعلاقات مكتوبة بحساسية نادرة", "n": "", "s": "t1"}, {"t": "Chihayafuru", "jp": "ちはやふる", "d": "لعبة الكاروتا ومثلث عاطفي يمتد سنوات", "n": "", "s": "t1"}, {"t": "Katanagatari", "jp": "刀語", "d": "اثنتا عشرة حلقة طويلة، حوار نيسيو إيسين ونهاية موجعة", "n": "", "s": "t1"}, {"t": "Honey and Clover", "jp": "ハチミツとクローバー", "d": "طلاب فنون جامعيون وحب من طرف واحد. ناضج ومرّ وصادق", "n": "", "s": "t1"}, {"t": "White Album 2", "jp": "WHITE ALBUM2", "d": "مثلث عاطفي بلا أشرار — كلٌّ يجرح الآخر بصدق", "n": "", "s": "t1"}, {"t": "Given", "jp": "ギヴン", "d": "فرقة موسيقية وحزن وفقد، كتابته أقوى من كونه رومانساً", "n": "", "s": "t1"}, {"t": "Wotaku ni Koi wa Muzukashii", "jp": "ヲタクに恋は難しい", "d": "موظفون أوتاكو في الثلاثينات، رومانس ناضج بلا دراما مفتعلة", "n": "", "s": "t1"}, {"t": "Kubo-san wa Mob wo Yurusanai", "jp": "久保さんは僕を許さない", "d": "ولد شفاف اجتماعياً وزميلة هي الوحيدة التي تراه", "n": "", "s": "t2"}, {"t": "Ao Ashi", "jp": "アオアシ", "d": "كرة قدم ولاعب يتعلم قراءة الملعب بعقله", "n": "", "s": "t2"}, {"t": "Kaze ga Tsuyoku Fuiteiru", "jp": "風が強く吹いている", "d": "طلاب جامعة يُجرّون لفريق ماراثون", "n": "", "s": "t2"}, {"t": "Medalist", "jp": "メダリスト", "d": "تزلج فني، ومن أنظف الأعمال الرياضية عاطفياً", "n": "", "s": "t2"}, {"t": "Nagi no Asukara", "jp": "凪のあすから", "d": "رومانس وعالم تحت الماء، مشاعر متشابكة بشكل نادر", "n": "", "s": "t2"}, {"t": "Yesterday wo Utatte", "jp": "イエスタデイをうたって", "d": "خريجون تائهون وعلاقات معقدة، بجو خريفي حزين", "n": "", "s": "t2"}, {"t": "Kimi ni Todoke", "jp": "君に届け", "d": "فتاة يخافها الجميع لشكلها وقصة حبها", "n": "", "s": "t2"}, {"t": "Tsurune", "jp": "ツルネ", "d": "رماية بالقوس، هادئ ومصوَّر بشكل خيالي", "n": "", "s": "t2"}, {"t": "Adachi to Shimamura", "jp": "安達としまむら", "d": "بطيء جداً ومبني على التفاصيل الداخلية الصامتة", "n": "", "s": "t2"}, {"t": "Sasaki to Miyano", "jp": "佐々木と宮野", "d": "هادئ ولطيف ومريح، شخصياته محبوبة", "n": "", "s": "t2"}, {"t": "Sasayaku You ni Koi wo Utau", "jp": "ささやくように恋を唄う", "d": "موسيقى ومشاعر أولى، خفيف", "n": "", "s": "t2"}, {"t": "Watashi no Shiawase na Kekkon", "jp": "わたしの幸せな結婚", "d": "رومانس تاريخي هادئ بإنتاج راقٍ", "n": "", "s": "t2"}, {"t": "Senpai ga Uzai Kouhai no Hanashi", "jp": "先輩がうざい後輩の話", "d": "بيئة عمل وفرق حجم وشخصية، دافئ", "n": "", "s": "t2"}, {"t": "2.5-jigen no Ririsa", "jp": "2.5次元の誘惑", "d": "كوسبلاي ونادي مانجا — الأقرب لفكرة الدمية العاشقة", "n": "", "s": "t2"}, {"t": "Yofukashi no Uta", "jp": "よふかしのうた", "d": "ليل وهروب وعلاقة غريبة، بجمالية بصرية وموسيقية", "n": "", "s": "t2"}, {"t": "Tonikaku Kawaii", "jp": "トニカクカワイイ", "d": "يتزوجان من الحلقة الأولى، والقصة عن بناء العلاقة", "n": "", "s": "t2"}, {"t": "SK8 the Infinity", "jp": "SK∞ エスケーエイト", "d": "تزلج، ملوّن وسريع وممتع", "n": "", "s": "t2"}, {"t": "Nichijou", "jp": "日常", "d": "أعتى كوميديا عبثية أُنتجت", "n": "", "s": "t2"}, {"t": "Fune wo Amu", "jp": "舟を編む", "d": "فريق يؤلف قاموساً على مدى خمسة عشر عاماً", "n": "", "s": "t2"}, {"t": "Kotaro wa Hitorigurashi", "jp": "コタローは一人暮らし", "d": "طفل في الرابعة يعيش وحده — كوميدي ثم يوجع بهدوء", "n": "", "s": "t2"}, {"t": "Gakuen Babysitters", "jp": "学園ベビーシッターズ", "d": "دافئ ومريح ومضحك", "n": "", "s": "t2"}, {"t": "KonoSuba", "jp": "この素晴らしい世界に祝福を!", "d": "إيسيكاي ساخر يفكك النوع، ومن أضحك ما أُنتج", "n": "", "s": "t2"}, {"t": "Hai to Gensou no Grimgar", "jp": "灰と幻想のグリムガル", "d": "إيسيكاي واقعي قاسٍ، والموت له وزن", "n": "", "s": "t2"}, {"t": "Hamefura", "jp": "乙女ゲームの破滅フラグしかない悪役令嬢に転生してしまった…", "d": "تتقمص دور الشريرة وتحاول تجنّب نهايتها السيئة", "n": "", "s": "t2"}, {"t": "Loop 7-kaime no Akuyaku Reijou", "jp": "ループ7回目の悪役令嬢は、元敵国で自由気ままな花嫁生活を満喫する", "d": "بطلة تعيد حياتها للمرة الثامنة — سياسة ورومانس وذكاء", "n": "", "s": "t2"}, {"t": "Somali to Mori no Kamisama", "jp": "ソマリと森の神様", "d": "غولم يربي طفلة بشرية في عالم يكره البشر", "n": "", "s": "t2"}, {"t": "Kino no Tabi", "jp": "キノの旅", "d": "مسافرة تزور دولاً لكلٍّ فلسفتها", "n": "", "s": "t2"}, {"t": "Saihate no Paladin", "jp": "最果てのパラディン", "d": "صبي يربيه ثلاثة موتى ويجد طريقه", "n": "", "s": "t2"}, {"t": "Isekai Shokudou", "jp": "異世界食堂", "d": "مطعم ياباني يفتح باباً لعالم فانتازي", "n": "", "s": "t2"}, {"t": "Pluto", "jp": "PLUTO", "d": "من ناوكي أوراساوا صاحب مونستر — واجب إن أعجبك", "n": "", "s": "t3"}, {"t": "Chi. Chikyuu no Undou ni Tsuite", "jp": "チ。―地球の運動について―", "d": "عن من ضحّوا بحياتهم لأجل فكرة أن الأرض تدور", "n": "", "s": "t3"}, {"t": "Tengoku Daimakyou", "jp": "天国大魔境", "d": "ما بعد الكارثة ولغزان متوازيان", "n": "", "s": "t3"}, {"t": "Sonny Boy", "jp": "サニーボーイ", "d": "سريالي وتجريبي، ليس للجميع لكنه لا يُنسى", "n": "", "s": "t3"}, {"t": "Hikaru ga Shinda Natsu", "jp": "光が死んだ夏", "d": "رعب قروي هادئ وأجواء خانقة", "n": "", "s": "t3"}, {"t": "Yuru Camp", "jp": "ゆるキャン△", "d": "تخييم شتوي بلا أي توتر — مثالي لأيام الانتظار", "n": "", "s": "t3"}, {"t": "Non Non Biyori", "jp": "のんのんびより", "d": "هدوء ريفي خالص", "n": "", "s": "t3"}, {"t": "Koe no Katachi", "jp": "聲の形", "d": "فِلم من أعظم ما أُنتج، لكنه ثقيل عاطفياً", "n": "", "s": "t3"}, {"t": "Josee, the Tiger and the Fish", "jp": "ジョゼと虎と魚たち", "d": "فِلم برسم خلاب وقصة دافئة", "n": "", "s": "t3"}, {"t": "Mimi wo Sumaseba", "jp": "耳をすませば", "d": "غيبلي — عن الحب والكتابة والحلم", "n": "", "s": "t3"}, {"t": "Kimi to, Nami ni Noretara", "jp": "きみと、波にのれたら", "d": "رومانس وفقد وسريالية جميلة", "n": "", "s": "t3"}, {"t": "Watashi no Oshi wa Akuyaku Reijou", "jp": "私の推しは悪役令嬢。", "d": "من عائلة بطلة ذكية في عالم فانتازي", "n": "", "s": "t3"}, {"t": "Isekai Nonbiri Nouka", "jp": "異世界のんびり農家", "d": "إيسيكاي هادئ بلا توتر، للاسترخاء", "n": "", "s": "t3"}];
+const KEY='animeTracker.v3';
+/* ===== استبعاد دائم — مبني في التطبيق، ما فيه زر يلغيه ===== */
+const BLOCK=['yaoi','yuri',"boys' love",'boys love','boys-love',"girls' love",'girls love','girls-love',
+  'shounen ai','shounen-ai','shoujo ai','shoujo-ai','hentai','erotica'];
+function blocked(){
+  const names=[];
+  for(const a of arguments) (a||[]).forEach(x=>names.push(String(x&&x.name?x.name:x).toLowerCase().trim()));
+  return names.some(n=>BLOCK.includes(n));
+}
+const SMAP={}; STATUS.forEach(s=>SMAP[s[0]]=s);
+const fresh=()=>({items:SEED.map((x,i)=>Object.assign({id:'s'+i,cover:'',rate:0,un:'',prog:0,eps:0,alid:0,year:0},x))});
+let store=null;
+try{const r=localStorage.getItem(KEY); if(r) store=JSON.parse(r);}catch(e){}
+if(!store||!store.items) store=fresh();
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(store));}
+  catch(e){ msg.textContent='تعذّر الحفظ التلقائي — استخدم «تصدير».'; } }
+
+let filter='all', query='', sortBy='def';
+const root=document.getElementById('root'), tabs=document.getElementById('tabs'),
+      statsEl=document.getElementById('stats'), msg=document.getElementById('msg');
+
+function drawStats(){
+  const it=store.items, rated=it.filter(x=>x.rate>0);
+  const seen=it.filter(x=>['loved','liked','watched','watching'].includes(x.s));
+  const avg=rated.length?(rated.reduce((a,b)=>a+b.rate,0)/rated.length).toFixed(1):'—';
+  const eps=seen.reduce((a,b)=>a+(b.eps||0),0);
+  const hrs=Math.round(eps*23/60);
+  const S=[[it.length,'في القائمة'],[seen.length,'شاهدته'],
+           [it.filter(x=>x.s==='plan').length,'بالانتظار'],
+           [avg+' \u2605','متوسط تقييمك'],[rated.length,'قيّمته'],
+           [hrs?hrs+' س':'—','تقريباً شاهدت']];
+  statsEl.innerHTML=S.map(s=>'<div class="stat"><b>'+s[0]+'</b><span>'+s[1]+'</span></div>').join('');
+}
+function drawTabs(){
+  const c={}; store.items.forEach(i=>c[i.s]=(c[i.s]||0)+1);
+  tabs.innerHTML='';
+  const mk=(k,l,col,n)=>{const d=document.createElement('div');
+    d.className='tab'+(filter===k?' on':''); if(filter===k) d.style.background=col;
+    d.innerHTML=l+' <span class="c">'+n+'</span>';
+    d.onclick=()=>{filter=k;draw();}; tabs.appendChild(d);};
+  mk('all','الكل','#2b2b6f',store.items.length);
+  STATUS.forEach(s=>mk(s[0],s[1],s[2],c[s[0]]||0));
+  const nc=store.items.filter(noCover).length;
+  if(nc) mk('nocover','بدون غلاف','#c0392b',nc);
+}
+const badImg=new Set();
+const noCover=i=>!i.cover||badImg.has(i.id);
+function stars(it){
+  const d=document.createElement('div'); d.className='stars';
+  for(let i=1;i<=5;i++){
+    const b=document.createElement('b');
+    b.textContent='\u2605'; if(i<=it.rate) b.className='on';
+    b.title=i+' من ٥';
+    b.onclick=()=>{ it.rate=(it.rate===i?0:i); save(); draw(); };
+    d.appendChild(b);
+  }
+  return d;
+}
+function card(it){
+  const c=document.createElement('div'); c.className='card';
+  const opts=STATUS.map(s=>'<option value="'+s[0]+'"'+(s[0]===it.s?' selected':'')+'>'+s[1]+'</option>').join('');
+  const link=it.alid?'<a href="https://anilist.co/anime/'+it.alid+'" target="_blank" title="افتح الصفحة">&#8599;</a>':'';
+  c.innerHTML='<div class="tools">'+link+'<button class="x" title="حذف">&times;</button></div>'+
+    (it.cover?'<img class="cv" src="'+it.cover+'">':'<div class="ph">'+it.t+'</div>')+
+    '<div class="b"><div class="ti">'+it.t+'</div>'+
+    ((it.year||it.eps)?'<div class="meta">'+[it.year||'',it.eps?it.eps+' حلقة':''].filter(Boolean).join(' \u00b7 ')+'</div>':'')+
+    '<div class="de">'+(it.d||'')+'</div>'+(it.n?'<div class="nt">'+it.n+'</div>':'')+'</div>';
+  const cv=c.querySelector('.cv'), ph=c.querySelector('.ph');
+  if(ph){ ph.title='اضغط لإصلاح الغلاف'; ph.onclick=()=>openFix(it); }
+  if(cv){ cv.title='اضغط لتغيير الغلاف'; cv.onclick=()=>openFix(it);
+    cv.onerror=()=>{ badImg.add(it.id);
+      const d=document.createElement('div'); d.className='ph'; d.textContent=it.t;
+      d.title='الصورة ما حمّلت — اضغط لإصلاحها'; d.onclick=()=>openFix(it);
+      cv.replaceWith(d); drawTabs(); }; }
+  const b=c.querySelector('.b');
+  b.appendChild(stars(it));
+  if(it.s==='paused'||it.s==='watching'){
+    const p=document.createElement('div'); p.className='prog';
+    const lb=document.createElement('span'); lb.textContent='الحلقة'; p.appendChild(lb);
+    const i1=document.createElement('input'); i1.type='number'; i1.min=0; i1.value=it.prog||0;
+    i1.onchange=e=>{it.prog=+e.target.value;save();};
+    p.appendChild(i1);
+    const sp=document.createElement('span'); sp.textContent='/ '+(it.eps||'؟'); p.appendChild(sp);
+    b.appendChild(p);
+  }
+  const sel=document.createElement('select'); sel.innerHTML=opts;
+  sel.onchange=e=>{it.s=e.target.value;save();draw();};
+  b.appendChild(sel);
+  const ta=document.createElement('textarea'); ta.placeholder='ملاحظتك…'; ta.value=it.un||'';
+  ta.onchange=e=>{it.un=e.target.value;save();};
+  b.appendChild(ta);
+  c.querySelector('.x').onclick=()=>{ if(confirm('حذف "'+it.t+'"؟')){
+    store.items=store.items.filter(x=>x.id!==it.id); save(); draw(); } };
+  return c;
+}
+function sorted(list){
+  const a=list.slice();
+  if(sortBy==='rate') a.sort((x,y)=>y.rate-x.rate);
+  if(sortBy==='az')   a.sort((x,y)=>x.t.localeCompare(y.t));
+  if(sortBy==='year') a.sort((x,y)=>(y.year||0)-(x.year||0));
+  return a;
+}
+function draw(){
+  drawStats(); drawTabs(); root.innerHTML='';
+  const q=query.trim().toLowerCase();
+  if(filter==='nocover'){
+    const list=sorted(store.items.filter(i=>noCover(i) &&
+      (!q||i.t.toLowerCase().includes(q)||(i.jp||'').includes(query))));
+    const h=document.createElement('h2'); h.style.background='#c0392b';
+    h.innerHTML='<span>بدون غلاف — اضغط على أي مربّع لإصلاحه</span><span class="n">'+list.length+'</span>';
+    root.appendChild(h);
+    const g=document.createElement('div'); g.className='grid';
+    list.forEach(i=>g.appendChild(card(i))); root.appendChild(g);
+    if(!list.length) root.innerHTML='<div class="empty">كل الأغلفة موجودة \u2713</div>';
+    return;
+  }
+  const groups = filter==='all' ? STATUS.map(s=>s[0]) : [filter];
+  let total=0;
+  groups.forEach(k=>{
+    const list=sorted(store.items.filter(i=>i.s===k &&
+      (!q||i.t.toLowerCase().includes(q)||(i.jp||'').includes(query)||
+       (i.d||'').includes(query)||(i.un||'').includes(query))));
+    if(!list.length) return; total+=list.length;
+    const h=document.createElement('h2'); h.style.background=SMAP[k][2];
+    h.innerHTML='<span>'+SMAP[k][1]+'</span><span class="n">'+list.length+'</span>';
+    root.appendChild(h);
+    const g=document.createElement('div'); g.className='grid';
+    list.forEach(i=>g.appendChild(card(i))); root.appendChild(g);
+  });
+  if(!total) root.innerHTML='<div class="empty">لا توجد نتائج</div>';
+}
+
+async function enrich(){
+  const need=store.items.filter(i=>!i.cover&&!i.tried&&!i.lock);
+  for(let i=0;i<need.length;i+=20){
+    const ch=need.slice(i,i+20);
+    const q='query{'+ch.map((it,j)=>'m'+j+':Page(perPage:1){media(search:'+
+      JSON.stringify(it.jp||it.t)+',type:ANIME,sort:SEARCH_MATCH)'+
+      '{id episodes seasonYear coverImage{large}}}').join(' ')+'}';
+    try{
+      const r=await fetch('https://graphql.anilist.co',{method:'POST',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})});
+      const j=await r.json();
+      ch.forEach((it,k)=>{ const p=j.data&&j.data['m'+k], m=p&&p.media&&p.media[0];
+        it.tried=1;
+        if(m){ if(m.coverImage) it.cover=m.coverImage.large;
+               it.alid=m.id; it.eps=m.episodes||0; it.year=m.seasonYear||0; } });
+    }catch(e){}
+    await new Promise(r=>setTimeout(r,650));
+  }
+  for(const it of store.items.filter(i=>!i.cover&&!i.lock)){
+    try{
+      const r=await fetch('https://api.jikan.moe/v4/anime?limit=1&q='+encodeURIComponent(it.t));
+      const j=await r.json(); const m=j.data&&j.data[0];
+      if(m){ const u=m.images&&m.images.jpg; if(u) it.cover=u.large_image_url||u.image_url;
+             it.eps=it.eps||m.episodes||0; it.year=it.year||m.year||0; }
+    }catch(e){}
+    await new Promise(r=>setTimeout(r,450));
+  }
+  save(); draw();
+}
+
+document.getElementById('btnPick').onclick=()=>{
+  const pool=store.items.filter(i=>['plan','t1','t2','paused'].includes(i.s));
+  const box=document.getElementById('pick');
+  if(!pool.length){ box.style.display='none'; return; }
+  const p=pool[Math.floor(Math.random()*pool.length)];
+  box.style.display='block';
+  box.innerHTML=(p.cover?'<img src="'+p.cover+'">':'')+
+    '<div style="font-weight:700">'+p.t+'</div>'+
+    '<div style="font-size:.78rem;color:#666;margin-top:4px">'+(p.d||'')+'</div>'+
+    '<div style="font-size:.72rem;color:#16a085;margin-top:6px">'+SMAP[p.s][1]+'</div>';
+};
+
+const addBox=document.getElementById('addBox'), res=document.getElementById('res'),
+      ss=document.getElementById('ss');
+ss.innerHTML=STATUS.map(s=>'<option value="'+s[0]+'">'+s[1]+'</option>').join(''); ss.value='plan';
+document.getElementById('btnAdd').onclick=()=>{addBox.style.display=addBox.style.display==='none'?'block':'none';};
+async function search(){
+  const term=document.getElementById('sq').value.trim(); if(!term) return;
+  msg.textContent='جارٍ البحث…'; res.innerHTML='';
+  const q='query($s:String){Page(perPage:12){media(search:$s,type:ANIME,sort:SEARCH_MATCH,isAdult:false)'+
+    '{id episodes seasonYear genres tags{name} title{romaji native english} coverImage{large} description(asHtml:false)}}}';
+  try{
+    const r=await fetch('https://graphql.anilist.co',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,variables:{s:term}})});
+    const j=await r.json();
+    const list=((j.data&&j.data.Page&&j.data.Page.media)||[])
+      .filter(m=>!blocked(m.genres,m.tags)).slice(0,8);
+    if(!list.length){msg.textContent='ما فيه نتائج';return;}
+    msg.textContent='اختر النتيجة الصحيحة:';
+    list.forEach(m=>{
+      const name=m.title.english||m.title.romaji;
+      const d=document.createElement('div'); d.className='r';
+      d.innerHTML=(m.coverImage?'<img src="'+m.coverImage.large+'">':'')+
+        '<span>'+name+(m.seasonYear?' ('+m.seasonYear+')':'')+'</span>';
+      d.onclick=()=>{
+        if(store.items.some(x=>x.alid===m.id||x.t===name)){msg.textContent='موجود عندك أصلاً';return;}
+        store.items.unshift({id:'u'+Date.now(),t:name,jp:m.title.native||name,
+          d:(m.description||'').replace(/<[^>]*>/g,'').slice(0,110),n:'',s:ss.value,
+          cover:m.coverImage?m.coverImage.large:'',rate:0,un:'',prog:0,
+          eps:m.episodes||0,alid:m.id,year:m.seasonYear||0,tried:1});
+        save(); draw(); res.innerHTML=''; msg.textContent='تمت الإضافة \u2713';
+        document.getElementById('sq').value='';
+      };
+      res.appendChild(d);
+    });
+  }catch(e){msg.textContent='فشل الاتصال';}
+}
+document.getElementById('btnGo').onclick=search;
+document.getElementById('sq').addEventListener('keydown',e=>{if(e.key==='Enter')search();});
+document.getElementById('q').addEventListener('input',e=>{query=e.target.value;draw();});
+document.getElementById('sort').addEventListener('change',e=>{sortBy=e.target.value;draw();});
+
+/* ================= import from sites ================= */
+const smsg=document.getElementById('smsg');
+document.getElementById('btnSync').onclick=()=>{
+  const b=document.getElementById('syncBox');
+  b.style.display = b.style.display==='none' ? 'block' : 'none';
+};
+const SM={ 'current':'watching','watching':'watching','repeating':'watching','rewatching':'watching',
+  'completed':'watched','complete':'watched','watched':'watched','finished':'watched',
+  'paused':'paused','on-hold':'paused','on hold':'paused','onhold':'paused','hold':'paused',
+  'dropped':'dropped','notinteresting':'dropped','not interesting':'dropped',
+  'planning':'plan','plantowatch':'plan','plan to watch':'plan','ptw':'plan','planned':'plan' };
+function mapStatus(s){ return SM[String(s||'').trim().toLowerCase()] || ''; }
+function norm(t){ return String(t||'').toLowerCase().replace(/[^a-z0-9\u3000-\u9fff]/g,''); }
+
+function merge(rows){
+  const ovr=document.getElementById('ovr').checked;
+  const byId={}, byName={};
+  store.items.forEach(i=>{ if(i.alid) byId[i.alid]=i; byName[norm(i.t)]=i; byName[norm(i.jp)]=i; });
+  let upd=0, add=0;
+  rows.forEach(r=>{
+    let it = (r.alid&&byId[r.alid]) || byName[norm(r.title)] || byName[norm(r.jp)];
+    if(it){
+      if(ovr && r.status) it.s=r.status;
+      if(r.rate) it.rate=r.rate;
+      if(r.prog) it.prog=r.prog;
+      if(r.eps&&!it.eps) it.eps=r.eps;
+      if(r.year&&!it.year) it.year=r.year;
+      if(r.alid&&!it.alid) it.alid=r.alid;
+      if(r.cover&&!it.cover) it.cover=r.cover;
+      upd++;
+    } else {
+      const o={id:'i'+Date.now()+Math.random().toString(36).slice(2,6),
+        t:r.title, jp:r.jp||r.title, d:r.desc||'', n:'',
+        s:r.status||'plan', cover:r.cover||'', rate:r.rate||0, un:'',
+        prog:r.prog||0, eps:r.eps||0, alid:r.alid||0, year:r.year||0};
+      if(o.cover) o.tried=1;
+      store.items.push(o); byName[norm(o.t)]=o; if(o.alid) byId[o.alid]=o;
+      add++;
+    }
+  });
+  save(); draw();
+  smsg.textContent='تم: حُدّث '+upd+' وأُضيف '+add+'. جارٍ جلب الأغلفة الناقصة…';
+  enrich().then(()=>{ smsg.textContent='اكتمل الاستيراد \u2713 (حُدّث '+upd+' وأُضيف '+add+')'; });
+}
+
+/* --- AniList --- */
+document.getElementById('btnAL').onclick=async()=>{
+  const u=document.getElementById('alUser').value.trim();
+  if(!u){ smsg.textContent='اكتب اسم المستخدم أولاً'; return; }
+  smsg.textContent='جارٍ السحب من AniList…';
+  const q='query($u:String){MediaListCollection(userName:$u,type:ANIME){lists{entries{'+
+    'status progress score(format:POINT_100) media{id episodes seasonYear '+
+    'title{romaji english native} coverImage{large} description(asHtml:false)}}}}}';
+  try{
+    const r=await fetch('https://graphql.anilist.co',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,variables:{u}})});
+    const j=await r.json();
+    const col=j.data&&j.data.MediaListCollection;
+    if(!col){ smsg.textContent='ما لقيت هذا المستخدم، أو قائمته غير عامة.'; return; }
+    const rows=[];
+    col.lists.forEach(L=>L.entries.forEach(e=>{
+      const m=e.media||{};
+      rows.push({ title:(m.title.english||m.title.romaji), jp:m.title.native||'',
+        alid:m.id, eps:m.episodes||0, year:m.seasonYear||0,
+        cover:m.coverImage?m.coverImage.large:'',
+        desc:(m.description||'').replace(/<[^>]*>/g,'').slice(0,110),
+        status:mapStatus(e.status), prog:e.progress||0,
+        rate:e.score?Math.max(1,Math.round(e.score/20)):0 });
+    }));
+    if(!rows.length){ smsg.textContent='القائمة فاضية.'; return; }
+    smsg.textContent='وصلني '+rows.length+' عنوان، جارٍ الدمج…';
+    merge(rows);
+  }catch(e){ smsg.textContent='فشل الاتصال بـ AniList'; }
+};
+
+/* --- MyAnimeList XML export --- */
+document.getElementById('btnMAL').onclick=()=>document.getElementById('malFile').click();
+document.getElementById('malFile').onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  smsg.textContent='جارٍ قراءة الملف…';
+  try{
+    let text;
+    if(f.name.endsWith('.gz')){
+      if(!('DecompressionStream' in window)){
+        smsg.textContent='متصفحك ما يفك ضغط ‎.gz — فك الضغط يدوياً وارفع ملف ‎.xml'; return; }
+      const ds=new DecompressionStream('gzip');
+      text=await new Response(f.stream().pipeThrough(ds)).text();
+    } else { text=await f.text(); }
+    const doc=new DOMParser().parseFromString(text,'text/xml');
+    const nodes=doc.getElementsByTagName('anime');
+    if(!nodes.length){ smsg.textContent='ما لقيت بيانات أنمي في الملف'; return; }
+    const g=(n,t)=>{const x=n.getElementsByTagName(t)[0];return x?x.textContent.trim():'';};
+    const rows=[];
+    for(const n of nodes){
+      const sc=parseInt(g(n,'my_score'))||0;
+      rows.push({ title:g(n,'series_title'), jp:'',
+        eps:parseInt(g(n,'series_episodes'))||0,
+        status:mapStatus(g(n,'my_status')),
+        prog:parseInt(g(n,'my_watched_episodes'))||0,
+        rate:sc?Math.max(1,Math.round(sc/2)):0 });
+    }
+    smsg.textContent='قرأت '+rows.length+' عنوان، جارٍ الدمج…';
+    merge(rows);
+  }catch(err){ smsg.textContent='تعذّرت قراءة الملف'; }
+};
+
+/* --- Simkl / generic CSV --- */
+function parseCSV(txt){
+  const rows=[]; let f='', row=[], q=false;
+  for(let i=0;i<txt.length;i++){
+    const c=txt[i];
+    if(q){ if(c==='"'){ if(txt[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if(c==='"') q=true;
+    else if(c===','||c==='\t'){ row.push(f); f=''; }
+    else if(c==='\n'){ row.push(f); f=''; if(row.some(x=>x!=='')) rows.push(row); row=[]; }
+    else if(c!=='\r') f+=c;
+  }
+  row.push(f); if(row.some(x=>x!=='')) rows.push(row);
+  return rows;
+}
+document.getElementById('btnCSV').onclick=()=>document.getElementById('csvFile').click();
+document.getElementById('csvFile').onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  smsg.textContent='جارٍ قراءة الملف…';
+  try{
+    const rows=parseCSV(await f.text());
+    if(rows.length<2){ smsg.textContent='الملف فاضي أو غير مفهوم'; return; }
+    const H=rows[0].map(h=>h.trim().toLowerCase());
+    const find=(...keys)=>H.findIndex(h=>keys.some(k=>h===k||h.includes(k)));
+    const iT=find('title','name','anime'), iS=find('status','list','watchlist'),
+          iR=find('rating','score','my rating','user rating'),
+          iE=find('episodes watched','watched episodes','last episode watched','progress'),
+          iY=find('year'), iA=find('anilist');
+    if(iT<0){ smsg.textContent='ما لقيت عمود العنوان في الملف'; return; }
+    const out=[];
+    for(let i=1;i<rows.length;i++){
+      const r=rows[i]; const t=(r[iT]||'').trim(); if(!t) continue;
+      const rt=iR>=0?parseFloat(r[iR]):0;
+      out.push({ title:t,
+        status: iS>=0?mapStatus(r[iS]):'',
+        rate: rt? (rt>5?Math.max(1,Math.round(rt/2)):Math.round(rt)) : 0,
+        prog: iE>=0?(parseInt(r[iE])||0):0,
+        year: iY>=0?(parseInt(r[iY])||0):0,
+        alid: iA>=0?(parseInt(r[iA])||0):0 });
+    }
+    if(!out.length){ smsg.textContent='ما لقيت صفوفاً صالحة'; return; }
+    smsg.textContent='قرأت '+out.length+' عنوان، جارٍ الدمج…';
+    merge(out);
+  }catch(err){ smsg.textContent='تعذّرت قراءة الملف'; }
+};
+
+/* ================= إصلاح الأغلفة يدوياً ================= */
+const ov=document.getElementById('ov'), fixRes=document.getElementById('fixRes'),
+      fixMsg=document.getElementById('fixMsg');
+let fixIt=null;
+function openFix(it){
+  fixIt=it; ov.classList.add('on');
+  document.getElementById('fixFor').textContent=it.t+((it.jp&&it.jp!==it.t)?' — '+it.jp:'');
+  document.getElementById('fixQ').value=it.jp&&it.jp!==it.t?it.jp:it.t;
+  document.getElementById('fixUrl').value=it.cover||'';
+  fixRes.innerHTML='';
+  fixMsg.textContent = it.cover ? 'فيه غلاف محفوظ — أي اختيار جديد يستبدله.'
+                                : 'ابحث بالاسم الياباني أو اللاتيني، أو الصق رابط صورة.';
+}
+function closeFix(){ ov.classList.remove('on'); fixIt=null; }
+document.getElementById('fixClose').onclick=closeFix;
+ov.onclick=e=>{ if(e.target===ov) closeFix(); };
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&ov.classList.contains('on')) closeFix(); });
+
+function applyCover(url,extra){
+  if(!fixIt||!url) return;
+  badImg.delete(fixIt.id);
+  fixIt.cover=url; fixIt.lock=1; fixIt.tried=1;
+  if(extra){ if(extra.alid) fixIt.alid=extra.alid;
+             if(extra.eps)  fixIt.eps=extra.eps;
+             if(extra.year) fixIt.year=extra.year; }
+  save(); draw(); closeFix();
+}
+function showFixRes(list,src){
+  if(!list.length){ fixMsg.textContent='ما فيه نتائج في '+src; return; }
+  fixMsg.textContent='اختر الغلاف الصحيح — نتائج '+src;
+  fixRes.innerHTML='';
+  list.forEach(m=>{
+    const d=document.createElement('div'); d.className='r';
+    d.innerHTML=(m.img?'<img src="'+m.img+'">':'<div style="height:84px;background:#eceaf7;border-radius:5px"></div>')+
+      '<span>'+m.name+(m.year?' ('+m.year+')':'')+'</span>';
+    d.onclick=()=>{ if(!m.img){ fixMsg.textContent='هذه النتيجة بلا صورة — جرّب غيرها'; return; }
+                    applyCover(m.img,m.extra); };
+    fixRes.appendChild(d);
+  });
+}
+document.getElementById('fixAL').onclick=async()=>{
+  const term=document.getElementById('fixQ').value.trim(); if(!term) return;
+  fixMsg.textContent='جارٍ البحث في AniList…'; fixRes.innerHTML='';
+  const q='query($s:String){Page(perPage:12){media(search:$s,type:ANIME,sort:SEARCH_MATCH,isAdult:false)'+
+    '{id episodes seasonYear genres tags{name} title{romaji native english} coverImage{large}}}}';
+  try{
+    const r=await fetch('https://graphql.anilist.co',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,variables:{s:term}})});
+    const j=await r.json();
+    const list=((j.data&&j.data.Page&&j.data.Page.media)||[])
+      .filter(m=>!blocked(m.genres,m.tags)).slice(0,8);
+    showFixRes(list.map(m=>({img:m.coverImage?m.coverImage.large:'',
+      name:(m.title.english||m.title.romaji||m.title.native),year:m.seasonYear||0,
+      extra:{alid:m.id,eps:m.episodes||0,year:m.seasonYear||0}})),'AniList');
+  }catch(e){ fixMsg.textContent='فشل الاتصال بـ AniList'; }
+};
+document.getElementById('fixMAL').onclick=async()=>{
+  const term=document.getElementById('fixQ').value.trim(); if(!term) return;
+  fixMsg.textContent='جارٍ البحث في MyAnimeList…'; fixRes.innerHTML='';
+  try{
+    const r=await fetch('https://api.jikan.moe/v4/anime?limit=12&q='+encodeURIComponent(term));
+    const j=await r.json();
+    const list=(j.data||[]).filter(m=>!blocked(m.genres,m.explicit_genres,m.themes)).slice(0,8);
+    showFixRes(list.map(m=>{ const g=m.images&&m.images.jpg;
+      return {img:g?(g.large_image_url||g.image_url):'',
+              name:m.title_english||m.title,year:m.year||0,
+              extra:{eps:m.episodes||0,year:m.year||0}}; }),'MyAnimeList');
+  }catch(e){ fixMsg.textContent='فشل الاتصال بـ MyAnimeList'; }
+};
+document.getElementById('fixUrlGo').onclick=()=>{
+  const u=document.getElementById('fixUrl').value.trim();
+  if(!/^https?:\/\//i.test(u)){ fixMsg.textContent='الرابط لازم يبدأ بـ http أو https'; return; }
+  applyCover(u,null);
+};
+document.getElementById('fixAuto').onclick=async()=>{
+  if(!fixIt) return;
+  badImg.delete(fixIt.id);
+  fixIt.cover=''; fixIt.lock=0; fixIt.tried=0; save();
+  fixMsg.textContent='جارٍ الجلب التلقائي…';
+  await enrich(); closeFix();
+};
+document.getElementById('fixQ').addEventListener('keydown',
+  e=>{ if(e.key==='Enter') document.getElementById('fixAL').click(); });
+
+/* ================= الحلقات القادمة ================= */
+const upBox=document.getElementById('upBox');
+let upData=null, upTimer=null;
+const AR_DT=new Intl.DateTimeFormat('ar',{weekday:'long',day:'numeric',month:'long',
+  hour:'numeric',minute:'2-digit',hour12:true,timeZone:'Asia/Riyadh',
+  calendar:'gregory',numberingSystem:'latn'});
+document.getElementById('btnUp').onclick=()=>{
+  if(upBox.style.display==='block'){ upBox.style.display='none';
+    if(upTimer){clearInterval(upTimer);upTimer=null;} return; }
+  upBox.style.display='block';
+  if(upData) renderUp(); else loadUp();
+};
+async function loadUp(){
+  upBox.innerHTML='<div style="font-size:.82rem;color:#888">جارٍ فحص مواعيد البث…</div>';
+  const ids=store.items.filter(i=>i.alid).map(i=>i.alid);
+  const out=[];
+  for(let i=0;i<ids.length;i+=50){
+    const q='query($ids:[Int]){Page(perPage:50){media(id_in:$ids,type:ANIME)'+
+      '{id coverImage{medium} nextAiringEpisode{episode airingAt}}}}';
+    try{
+      const r=await fetch('https://graphql.anilist.co',{method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({query:q,variables:{ids:ids.slice(i,i+50)}})});
+      const j=await r.json();
+      ((j.data&&j.data.Page&&j.data.Page.media)||[]).forEach(m=>{ if(m.nextAiringEpisode) out.push(m); });
+    }catch(e){}
+    await new Promise(r=>setTimeout(r,650));
+  }
+  upData=out.sort((a,b)=>a.nextAiringEpisode.airingAt-b.nextAiringEpisode.airingAt);
+  renderUp();
+}
+function cdText(sec){
+  if(sec<=0) return 'نزلت \u2713';
+  const d=Math.floor(sec/86400), h=Math.floor(sec%86400/3600),
+        m=Math.floor(sec%3600/60), s=sec%60, p=n=>String(n).padStart(2,'0');
+  return d>0 ? d+' ي  '+p(h)+':'+p(m)+':'+p(s) : p(h)+':'+p(m)+':'+p(s);
+}
+function renderUp(){
+  if(upTimer){clearInterval(upTimer);upTimer=null;}
+  const byId={}; store.items.forEach(i=>{ if(i.alid) byId[i.alid]=i; });
+  const rows=(upData||[]).filter(m=>byId[m.id]);
+  let h='<div style="display:flex;justify-content:space-between;align-items:center">'+
+    '<b style="color:#2b2b6f;font-size:.94rem">الحلقات القادمة</b>'+
+    '<button class="g" id="upRef" style="font-size:.72rem;padding:4px 11px">تحديث</button></div>'+
+    '<div style="font-size:.69rem;color:#aaa;margin:3px 0 6px">بتوقيت الرياض · أرقام الحلقات فقط، بدون عناوين</div>';
+  if(!rows.length){
+    h+='<div style="font-size:.82rem;color:#888;padding:6px 0">ما فيه عمل من قائمتك عليه حلقة قادمة معلنة.</div>';
+  } else rows.forEach(m=>{
+    const it=byId[m.id], st=SMAP[it.s]||['','',''], cov=it.cover||(m.coverImage&&m.coverImage.medium)||'';
+    h+='<div class="up" data-at="'+m.nextAiringEpisode.airingAt+'">'+
+      (cov?'<img src="'+cov+'">':'')+
+      '<div><div class="t">'+it.t+'</div><div class="e">الحلقة '+m.nextAiringEpisode.episode+
+      ' · '+AR_DT.format(new Date(m.nextAiringEpisode.airingAt*1000))+
+      '<span class="tag" style="background:'+st[2]+'">'+st[1]+'</span></div></div>'+
+      '<div class="cd"></div></div>';
+  });
+  upBox.innerHTML=h;
+  document.getElementById('upRef').onclick=()=>{ upData=null; loadUp(); };
+  if(!rows.length) return;
+  const tick=()=>{
+    const now=Date.now()/1000;
+    upBox.querySelectorAll('.up').forEach(el=>{
+      const sec=Math.floor(+el.dataset.at-now), c=el.querySelector('.cd');
+      c.textContent=cdText(sec); c.className='cd'+(sec<86400?' soon':'');
+    });
+  };
+  tick(); upTimer=setInterval(tick,1000);
+}
+
+document.getElementById('btnExp').onclick=()=>{
+  const b=new Blob([JSON.stringify(store,null,1)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b);
+  a.download='anime-list-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+};
+document.getElementById('btnImp').onclick=()=>document.getElementById('file').click();
+document.getElementById('file').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return; const rd=new FileReader();
+  rd.onload=()=>{try{const o=JSON.parse(rd.result);
+    if(o&&o.items){store=o;save();draw();msg.textContent='تم الاستيراد \u2713';}}
+    catch(err){alert('ملف غير صالح');}};
+  rd.readAsText(f);
+};
+document.getElementById('btnReset').onclick=()=>{
+  if(confirm('إرجاع القائمة للحالة الأصلية؟ ستفقد تعديلاتك وتقييماتك.')){
+    store=fresh(); save(); draw(); enrich(); }
+};
+draw(); enrich();
+</script></body></html>
