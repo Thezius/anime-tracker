@@ -87,6 +87,9 @@ h2 .n{font-size:.78rem;opacity:.85;font-weight:400}
 #moodBtns{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
 #moodBtns button{background:#f3f2fb;color:#4a4a8f;font-size:.76rem}
 #moodBtns button:hover{background:#e3e0f7}
+#genreBtns{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;max-height:132px;overflow:auto}
+#genreBtns .gchip{background:#fff;border:1px solid #ddd9ee;color:#5b56a8;font-size:.73rem;padding:4px 11px}
+#genreBtns .gchip:hover{background:#f3f2fb;border-color:#b9b5e0}
 .rec{display:flex;gap:10px;padding:10px 4px;border-bottom:1px solid #f1f1f6}
 .rec:last-child{border-bottom:none}
 .rec img{width:52px;height:72px;object-fit:cover;border-radius:6px;flex-shrink:0}
@@ -275,6 +278,8 @@ h2 .n{font-size:.78rem;opacity:.85;font-weight:400}
   <div id="recMood">
     <div class="hint">يرشّح من قوائمك أنت — الانتظار والموقوف والترشيحات.</div>
     <div id="moodBtns"></div>
+    <div class="hint" style="margin-top:12px">أو اختر تصنيفاً من مكتبتك:</div>
+    <div id="genreBtns"></div>
   </div>
   <div id="recLike" style="display:none">
     <div class="hint">اختر عملاً أعجبك، وأجيب ما يشبهه من AniList مدعوماً بأصوات MyAnimeList.</div>
@@ -1206,6 +1211,7 @@ function renderUp(){
 
 /* ================= محرّك الترشيحات ================= */
 const ov3=document.getElementById('ov3'), recOut=document.getElementById('recOut');
+const recSeen={}, likeCache={};
 const GEN={Comedy:'كوميدي',Romance:'رومانس',Drama:'دراما',Fantasy:'فانتازيا',Adventure:'مغامرة',
  Action:'أكشن',Mystery:'غموض',Psychological:'نفسي',Thriller:'إثارة','Slice of Life':'شريحة حياة',
  Sports:'رياضي',Supernatural:'خوارق',Music:'موسيقى','Sci-Fi':'خيال علمي',Horror:'رعب',
@@ -1219,7 +1225,13 @@ const MOODS=[
  {k:'smart',l:'غموض وكتابة ذكية',g:['Mystery','Psychological','Thriller'],t:['Detective','Philosophy','Politics','Time Manipulation']},
  {k:'sport',l:'حماس رياضي',g:['Sports'],t:['Team Sports','Competition','Coming of Age']},
  {k:'adv',l:'خيال ومغامرة',g:['Adventure','Fantasy'],t:['World Building','Magic','Travel']},
- {k:'short',l:'قصير أخلّصه بليلة',g:[],t:[],maxEps:13}
+ {k:'short',l:'قصير أخلّصه بليلة',g:[],t:[],maxEps:13},
+ {k:'fight',l:'حماس وقتال',g:['Action'],t:['Martial Arts','Shounen','Super Power','Tournament']},
+ {k:'drama',l:'دراما تشدّ',g:['Drama'],t:['Coming of Age','Ensemble Cast','Primarily Adult Cast']},
+ {k:'occult',l:'خوارق وغموض',g:['Supernatural','Mystery'],t:['Demons','Ghost','Urban Fantasy']},
+ {k:'scifi',l:'خيال علمي',g:['Sci-Fi'],t:['Space','Cyberpunk','Time Manipulation','Robots']},
+ {k:'art',l:'فن وموسيقى',g:['Music'],t:['Musical','Performing Arts','Acting','Idol']},
+ {k:'long',l:'طويل أعيش فيه',g:[],t:[],minEps:40}
 ];
 const POOL=['plan','t1','t2','t3','paused'];
 const TIER={t1:3,t2:2,t3:1,plan:1,paused:2};
@@ -1243,9 +1255,23 @@ document.querySelectorAll('.rt').forEach(b=>b.onclick=()=>{
 });
 function buildMoods(){
   const box=document.getElementById('moodBtns');
-  if(box.children.length) return;
+  box.innerHTML='';
   MOODS.forEach(m=>{ const b=document.createElement('button');
-    b.textContent=m.l; b.onclick=()=>moodPick(m); box.appendChild(b); });
+    b.textContent=m.l; b.onclick=()=>moodPick(m,true); box.appendChild(b); });
+  const gbox=document.getElementById('genreBtns');
+  gbox.innerHTML='';
+  const cnt={};
+  store.items.filter(i=>POOL.includes(i.s)).forEach(i=>
+    (i.g||[]).forEach(g=>{ cnt[g]=(cnt[g]||0)+1; }));
+  const gs=Object.keys(cnt).filter(g=>!blocked([g])).sort((a,b)=>cnt[b]-cnt[a]);
+  if(!gs.length){
+    gbox.innerHTML='<span class="hint">التصنيفات تظهر بعد اكتمال تمريرة الإثراء.</span>';
+    return;
+  }
+  gs.forEach(g=>{ const b=document.createElement('button'); b.className='gchip';
+    b.innerHTML=esc(GEN[g]||g)+' <span style="opacity:.55">'+cnt[g]+'</span>';
+    b.onclick=()=>moodPick({k:'g:'+g,l:GEN[g]||g,g:[g],t:[]},true);
+    gbox.appendChild(b); });
 }
 function recCard(o){
   const link=o.mal?'https://myanimelist.net/anime/'+(+o.mal)
@@ -1257,7 +1283,10 @@ function recCard(o){
     (o.pill?'<span class="pill'+(o.pillNew?' new':'')+'">'+o.pill+'</span>':'')+
     '</div></div>';
 }
-function moodPick(m){
+function moodPick(m,reset){
+  const key='m:'+m.k;
+  if(reset||!recSeen[key]) recSeen[key]={};
+  const seen=recSeen[key];
   const pool=store.items.filter(i=>POOL.includes(i.s)&&okFilters(i));
   const scored=[];
   pool.forEach(i=>{
@@ -1266,14 +1295,25 @@ function moodPick(m){
     m.g.forEach(x=>{ if(g.includes(x)){ sc+=3; hitG.push(GEN[x]||x); } });
     m.t.forEach(x=>{ if(t.includes(x)){ sc+=1; hitT.push(x); } });
     if(m.maxEps){ if(i.eps&&i.eps<=m.maxEps) sc+=3; else if(i.eps) sc-=2; }
-    if(!sc) return;
-    sc+=(TIER[i.s]||0)*0.6;
+    if(m.minEps){ if(i.eps&&i.eps>=m.minEps) sc+=3; else if(i.eps) sc-=2; }
+    if(!sc||sc<0) return;
+    sc+=(TIER[i.s]||0)*0.6+Math.random()*0.45;
     scored.push({i:i,sc:sc,hitG:hitG,hitT:hitT});
   });
   scored.sort((a,b)=>b.sc-a.sc);
-  if(!scored.length){ recOut.innerHTML='<div class="hint" style="margin-top:12px">ما لقيت شيئاً يطابق هذا المزاج في قوائمك. جرّب مزاجاً آخر أو أطفئ الفلاتر.</div>'; return; }
-  let h='<div style="margin-top:12px;font-size:.78rem;color:#666">أفضل ٣ من قوائمك لهذا المزاج:</div>';
-  scored.slice(0,3).forEach(o=>{
+  if(!scored.length){ recOut.innerHTML='<div class="hint" style="margin-top:12px">ما لقيت شيئاً يطابق «'+esc(m.l)+'» في قوائمك. جرّب غيره أو أطفئ الفلاتر.</div>'; return; }
+  const fresh=scored.filter(o=>!seen[o.i.id]);
+  if(!fresh.length){
+    recOut.innerHTML='<div class="hint" style="margin-top:12px">عرضت عليك كل ما يطابق «'+esc(m.l)+'» في قوائمك ('+scored.length+'). ما فيه غيرها.</div>'+
+      '<div class="row" style="margin-top:9px"><button class="g" id="recAgain">اعرضها من البداية</button></div>';
+    document.getElementById('recAgain').onclick=()=>moodPick(m,true);
+    return;
+  }
+  const shown=fresh.slice(0,3);
+  shown.forEach(o=>seen[o.i.id]=1);
+  const left=fresh.length-shown.length;
+  let h='<div style="margin-top:12px;font-size:.78rem;color:#666">«'+esc(m.l)+'» من قوائمك:</div>';
+  shown.forEach(o=>{
     const i=o.i, why=[];
     if(o.hitG.length) why.push(o.hitG.join(' \u00b7 '));
     if(o.hitT.length) why.push(o.hitT.slice(0,3).join(' \u00b7 '));
@@ -1282,9 +1322,14 @@ function moodPick(m){
     h+=recCard({t:i.t,cover:i.cover,mal:i.mal,alid:i.alid,year:0,
       why:why.join('  \u2022  '),pill:(SMAP[i.s]||['',''])[1]});
   });
-  const more=scored.length-3;
-  if(more>0) h+='<div style="font-size:.72rem;color:#aaa;margin-top:8px">و'+more+' غيرها تطابق هذا المزاج.</div>';
+  h+='<div class="row" style="margin-top:11px;align-items:center">'+
+     (left>0?'<button class="g" id="recMore">رشّح غيرها ('+left+' متبقٍ)</button>':
+             '<span class="hint">هذي آخرها لهذا الخيار.</span>')+
+     '<button class="g" id="recAgain" style="font-size:.72rem">من البداية</button></div>';
   recOut.innerHTML=h;
+  const mb=document.getElementById('recMore');
+  if(mb) mb.onclick=()=>moodPick(m);
+  document.getElementById('recAgain').onclick=()=>moodPick(m,true);
 }
 function fillLikeList(){
   const dl=document.getElementById('likeList');
@@ -1298,9 +1343,10 @@ document.getElementById('likeGo').onclick=async()=>{
         ||store.items.find(i=>i.alid&&i.t.toLowerCase().includes(term));
   if(!src){ recOut.innerHTML='<div class="hint" style="margin-top:12px">ما لقيت هذا العمل في قوائمك — اكتب اسمه كما يظهر في البطاقة.</div>'; return; }
   recOut.innerHTML='<div class="hint" style="margin-top:12px">جارٍ الجلب…</div>';
-  const seen={}, mine={};
+  if(likeCache[src.alid]){ renderLike(src); return; }
+  const mine={};
   store.items.forEach(i=>{ if(i.alid) mine[i.alid]=i; });
-  const q='query($id:Int){Media(id:$id){recommendations(sort:RATING_DESC,perPage:20){nodes{rating '+
+  const q='query($id:Int){Media(id:$id){recommendations(sort:RATING_DESC,perPage:40){nodes{rating '+
     'mediaRecommendation{id idMal isAdult seasonYear episodes genres coverImage{large} '+
     'tags{name rank} title{romaji english}}}}}}';
   let recs=[];
@@ -1311,7 +1357,7 @@ document.getElementById('likeGo').onclick=async()=>{
     const j=await r.json();
     recs=(((j.data||{}).Media||{}).recommendations||{}).nodes||[];
   }catch(e){ recOut.innerHTML='<div class="hint" style="margin-top:12px">تعذّر الاتصال بـ AniList.</div>'; return; }
-  let votes={};
+  const votes={};
   if(src.mal){
     try{
       const r2=await fetch('https://api.jikan.moe/v4/anime/'+(+src.mal)+'/recommendations');
@@ -1319,33 +1365,63 @@ document.getElementById('likeGo').onclick=async()=>{
       (j2.data||[]).forEach(x=>{ if(x.entry) votes[x.entry.mal_id]=x.votes||0; });
     }catch(e){}
   }
-  const out=[];
+  const raw=[];
   recs.forEach(n=>{
     const m=n.mediaRecommendation; if(!m||m.isAdult) return;
     const tg=(m.tags||[]).filter(t=>t.rank>=55).map(t=>t.name);
     if(blocked(m.genres,tg)) return;
-    const fake={year:m.seasonYear||0,g:m.genres||[],tg:tg};
-    if(!okFilters(fake)) return;
-    const have=mine[m.id];
-    if(have&&['loved','liked','watched','watching','dropped'].includes(have.s)) return;
-    out.push({m:m,score:(n.rating||0)+(votes[m.idMal]||0)*0.6,have:have,tg:tg});
+    raw.push({m:m,rating:n.rating||0,votes:votes[m.idMal]||0,tg:tg});
   });
-  if(!out.length){ recOut.innerHTML='<div class="hint" style="margin-top:12px">ما طلع شيء جديد بعد التصفية — غالباً شفتها كلها. جرّب إطفاء الفلاتر.</div>'; return; }
-  out.sort((a,b)=>b.score-a.score);
+  likeCache[src.alid]=raw;
+  renderLike(src,true);
+};
+function renderLike(src,reset){
+  const key='l:'+src.alid;
+  if(reset||!recSeen[key]) recSeen[key]={};
+  const seen=recSeen[key];
+  const mine={}; store.items.forEach(i=>{ if(i.alid) mine[i.alid]=i; });
+  const all=(likeCache[src.alid]||[]).filter(o=>{
+    const m=o.m;
+    if(!okFilters({year:m.seasonYear||0,g:m.genres||[],tg:o.tg})) return false;
+    const have=mine[m.id];
+    if(have&&['loved','liked','watched','watching','dropped'].includes(have.s)) return false;
+    return true;
+  }).sort((a,b)=>(b.rating+b.votes*0.6)-(a.rating+a.votes*0.6));
+  if(!all.length){
+    recOut.innerHTML='<div class="hint" style="margin-top:12px">ما طلع شيء بعد التصفية — غالباً شفتها كلها. جرّب إطفاء الفلاتر.</div>';
+    return;
+  }
+  const fresh=all.filter(o=>!seen[o.m.id]);
+  if(!fresh.length){
+    recOut.innerHTML='<div class="hint" style="margin-top:12px">عرضت كل ما يشبه <b>'+esc(src.t)+'</b> ('+all.length+' عملاً). ما فيه غيرها — جرّب عملاً آخر.</div>'+
+      '<div class="row" style="margin-top:9px"><button class="g" id="likeAgain">اعرضها من البداية</button></div>';
+    document.getElementById('likeAgain').onclick=()=>renderLike(src,true);
+    return;
+  }
+  const shown=fresh.slice(0,6);
+  shown.forEach(o=>seen[o.m.id]=1);
+  const left=fresh.length-shown.length;
   let h='<div style="margin-top:12px;font-size:.78rem;color:#666">أقرب ما يشبه <b>'+esc(src.t)+'</b>:</div>';
-  out.slice(0,6).forEach(o=>{
-    const m=o.m, why=[];
+  shown.forEach(o=>{
+    const m=o.m, have=mine[m.id], why=[];
     const gs=(m.genres||[]).slice(0,3).map(x=>GEN[x]||x);
     if(gs.length) why.push(gs.join(' \u00b7 '));
     if(o.tg.length) why.push(o.tg.slice(0,2).join(' \u00b7 '));
     if(m.episodes) why.push(m.episodes+' حلقة');
-    if(votes[m.idMal]) why.push('\u2191 '+votes[m.idMal]+' صوت في MAL');
+    if(o.votes) why.push('\u2191 '+o.votes+' صوت في MAL');
     h+=recCard({t:m.title.english||m.title.romaji,cover:(m.coverImage||{}).large,
       mal:m.idMal,alid:m.id,year:m.seasonYear,why:why.join('  \u2022  '),
-      pill:o.have?('عندك: '+(SMAP[o.have.s]||['',''])[1]):'جديد عليك',pillNew:!o.have});
+      pill:have?('عندك: '+(SMAP[have.s]||['',''])[1]):'جديد عليك',pillNew:!have});
   });
+  h+='<div class="row" style="margin-top:11px;align-items:center">'+
+     (left>0?'<button class="g" id="likeMore">رشّح غيرها ('+left+' متبقٍ)</button>':
+             '<span class="hint">هذي آخرها لهذا العمل.</span>')+
+     '<button class="g" id="likeAgain" style="font-size:.72rem">من البداية</button></div>';
   recOut.innerHTML=h;
-};
+  const lb=document.getElementById('likeMore');
+  if(lb) lb.onclick=()=>renderLike(src);
+  document.getElementById('likeAgain').onclick=()=>renderLike(src,true);
+}
 
 /* ================= لوحة المزامنة ================= */
 const ov2=document.getElementById('ov2');
