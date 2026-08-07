@@ -703,13 +703,14 @@ function merge(rows){
       if(r.eps&&!it.eps) it.eps=r.eps;
       if(r.year&&!it.year) it.year=r.year;
       if(r.alid&&!it.alid) it.alid=r.alid;
+      if(r.mal&&!it.mal) it.mal=r.mal;
       if(r.cover&&!it.cover) it.cover=r.cover;
       upd++;
     } else {
       const o={id:'i'+Date.now()+Math.random().toString(36).slice(2,6),
         t:r.title, jp:r.jp||r.title, d:r.desc||'', n:'',
         s:r.status||'plan', cover:r.cover||'', rate:r.rate||0, un:'',
-        prog:r.prog||0, eps:r.eps||0, alid:r.alid||0, year:r.year||0};
+        prog:r.prog||0, eps:r.eps||0, alid:r.alid||0, mal:r.mal||0, year:r.year||0};
       if(o.cover) o.tried=1;
       store.items.push(o); byName[norm(o.t)]=o; if(o.alid) byId[o.alid]=o;
       add++;
@@ -771,6 +772,7 @@ document.getElementById('malFile').onchange=async e=>{
     for(const n of nodes){
       const sc=parseInt(g(n,'my_score'))||0;
       rows.push({ title:g(n,'series_title'), jp:'',
+        mal:parseInt(g(n,'series_animedb_id'))||0,
         eps:parseInt(g(n,'series_episodes'))||0,
         status:mapStatus(g(n,'my_status')),
         prog:parseInt(g(n,'my_watched_episodes'))||0,
@@ -937,11 +939,29 @@ async function autoFixIds(){
   const q='query($s:String){Page(perPage:6){media(search:$s,type:ANIME,isAdult:false)'+
     '{id idMal seasonYear episodes source genres coverImage{large}'+
     'title{romaji english native} synonyms}}}';
+  const qm='query($m:Int){Media(idMal:$m,type:ANIME){id idMal seasonYear episodes source '+
+    'genres coverImage{large} title{romaji english}}}';
   for(let n=0;n<pool.length;n++){
     const it=pool[n];
     const line='مطابقة تلقائية… '+(n+1)+'/'+pool.length+'  \u00b7  طوبق '+fixed;
     msg.textContent=line;
     const st=document.getElementById('fixStat'); if(st) st.textContent=line;
+    if(it.mal){                      // معرّف MAL موجود = مطابقة مؤكدة بلا تخمين
+      try{
+        const r=await fetch('https://graphql.anilist.co',{method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({query:qm,variables:{m:it.mal}})});
+        const j=await r.json();
+        const m=(j.data||{}).Media;
+        if(m&&!blocked(m.genres)){
+          it.alid=m.id; it.v2=0;
+          if(!it.cover&&m.coverImage) it.cover=m.coverImage.large;
+          if(!it.eps&&m.episodes) it.eps=m.episodes;
+          if(!it.year&&m.seasonYear) it.year=m.seasonYear;
+          fixed++; await new Promise(r=>setTimeout(r,750)); continue;
+        }
+      }catch(e){}
+    }
     try{
       const r=await fetch('https://graphql.anilist.co',{method:'POST',
         headers:{'Content-Type':'application/json'},
