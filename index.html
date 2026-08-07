@@ -91,6 +91,22 @@ h2 .n{font-size:.78rem;opacity:.85;font-weight:400}
 #fixRes .r img{width:100%;border-radius:5px;margin-bottom:4px}
 #fixRes .r span{font-size:.66rem;display:block;line-height:1.3}
 #fixMsg{font-size:.77rem;color:#6c63c9;margin-top:9px;min-height:17px}
+#calBox{background:#fff;border-radius:12px;padding:13px 15px;margin-bottom:16px;display:none;
+ box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.calhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+.calhead b{color:#2b2b6f;font-size:.94rem}
+.calhead .nav{margin-right:auto;display:flex;gap:6px}
+.calhead button{font-size:.72rem;padding:4px 11px}
+.calgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
+@media(max-width:820px){.calgrid{grid-template-columns:repeat(auto-fit,minmax(128px,1fr))}}
+.calday{background:#fafaff;border:1px solid #eeedf7;border-radius:9px;padding:7px 6px;min-height:74px}
+.calday.today{border-color:#6c63c9;background:#f4f2ff}
+.calday .dh{font-size:.68rem;color:#8a8aa5;margin-bottom:5px;text-align:center}
+.calday.today .dh{color:#6c63c9;font-weight:700}
+.calep{background:#fff;border-radius:7px;padding:5px 6px;margin-bottom:5px;
+ border-inline-start:3px solid #ccc;font-size:.68rem;line-height:1.45}
+.calep .n{font-weight:700;direction:ltr;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.calep .m{color:#888;font-size:.63rem}
 #upBox{background:#fff;border-radius:12px;padding:13px 15px;margin-bottom:16px;display:none;
  box-shadow:0 1px 4px rgba(0,0,0,.07)}
 .up{display:flex;gap:10px;align-items:center;padding:9px 2px;border-bottom:1px solid #f1f1f6}
@@ -101,7 +117,7 @@ h2 .n{font-size:.78rem;opacity:.85;font-weight:400}
 .up .tag{font-size:.61rem;padding:1px 7px;border-radius:9px;color:#fff;margin-right:4px}
 .up .cd{direction:ltr;unicode-bidi:embed;font-weight:700;color:#2b2b6f;white-space:nowrap;margin-inline-start:4px}
 .up .cd.soon{color:#c0392b}
-@media print{body{background:#fff;padding:0}.bar,.tabs,.stats,#pick,#upBox,#ov,.card select,.card textarea,.tools,.prog{display:none!important}
+@media print{body{background:#fff;padding:0}.bar,.tabs,.stats,#pick,#upBox,#calBox,#ov,#ov2,.card select,.card textarea,.tools,.prog{display:none!important}
  .card{box-shadow:none;border:1px solid #e3e3ea}}
 </style></head><body><div class="wrap">
 <h1>متتبّع الأنمي</h1>
@@ -130,6 +146,7 @@ h2 .n{font-size:.78rem;opacity:.85;font-weight:400}
     <button class="g" id="btnSync">استيراد من موقع</button>
     <button class="g" id="btnPick">شوف وش أشوف</button>
     <button class="g" id="btnUp">الحلقات القادمة</button>
+    <button class="g" id="btnCal">التقويم</button>
     <button class="g" id="btnGh">المزامنة والنسخ</button>
     <span class="dot" id="syncDot">غير مربوط</span>
     <button class="g" id="btnExp">تصدير</button>
@@ -171,6 +188,7 @@ h2 .n{font-size:.78rem;opacity:.85;font-weight:400}
   <div class="tabs" id="tabs"></div>
 </div>
 
+<div id="calBox"></div>
 <div id="upBox"></div>
 <div id="pick"></div>
 <div id="root"></div></div>
@@ -797,6 +815,82 @@ async function enrich2(force){
   save(); draw();
   msg.textContent=done?('تم إثراء '+done+' عملاً \u2713'):'تعذّر جلب البيانات — جرّب لاحقاً';
   setTimeout(()=>{msg.textContent='';},4000);
+}
+
+/* ================= التقويم الأسبوعي ================= */
+const calBox=document.getElementById('calBox');
+const RSH=3*3600, DAYN=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const rDayIdx=ts=>Math.floor((ts+RSH)/86400);
+const weekStartIdx=di=>di-((di+4)%7);
+let calOff=0, calCache={};
+const CAL_D=new Intl.DateTimeFormat('ar',{day:'numeric',month:'short',timeZone:'Asia/Riyadh',
+  calendar:'gregory',numberingSystem:'latn'});
+const CAL_T=new Intl.DateTimeFormat('ar',{hour:'numeric',minute:'2-digit',hour12:true,
+  timeZone:'Asia/Riyadh',calendar:'gregory',numberingSystem:'latn'});
+
+document.getElementById('btnCal').onclick=()=>{
+  if(calBox.style.display==='block'){ calBox.style.display='none'; return; }
+  calBox.style.display='block'; drawCal();
+};
+async function fetchWeek(from,to){
+  const key=from+'';
+  if(calCache[key]) return calCache[key];
+  const ids=store.items.filter(i=>i.alid).map(i=>i.alid);
+  const q='query($ids:[Int],$f:Int,$t:Int,$p:Int){Page(page:$p,perPage:50){'+
+    'pageInfo{hasNextPage} airingSchedules(mediaId_in:$ids,airingAt_greater:$f,airingAt_lesser:$t,sort:TIME)'+
+    '{mediaId episode airingAt}}}';
+  const out=[]; let page=1, more=true;
+  while(more&&page<=4){
+    const r=await fetch('https://graphql.anilist.co',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({query:q,variables:{ids:ids,f:from-1,t:to,p:page}})});
+    const j=await r.json(); const pg=j.data&&j.data.Page;
+    if(!pg) break;
+    (pg.airingSchedules||[]).forEach(x=>out.push(x));
+    more=pg.pageInfo&&pg.pageInfo.hasNextPage; page++;
+    if(more) await new Promise(r=>setTimeout(r,700));
+  }
+  calCache[key]=out; return out;
+}
+async function drawCal(){
+  const ws=weekStartIdx(rDayIdx(Date.now()/1000))+calOff*7;
+  const from=ws*86400-RSH, to=from+7*86400;
+  const todayIdx=rDayIdx(Date.now()/1000);
+  const label=calOff===0?'هذا الأسبوع':(calOff===1?'الأسبوع القادم':(calOff===-1?'الأسبوع الماضي':
+    CAL_D.format(new Date(from*1000))));
+  calBox.innerHTML='<div class="calhead"><b>التقويم — '+label+'</b>'+
+    '<div class="nav"><button class="g" id="calPrev">\u2192 السابق</button>'+
+    '<button class="g" id="calNow">اليوم</button>'+
+    '<button class="g" id="calNext">التالي \u2190</button></div></div>'+
+    '<div id="calBody" style="font-size:.75rem;color:#888">جارٍ جلب مواعيد البث…</div>';
+  document.getElementById('calPrev').onclick=()=>{calOff--;drawCal();};
+  document.getElementById('calNext').onclick=()=>{calOff++;drawCal();};
+  document.getElementById('calNow').onclick=()=>{calOff=0;drawCal();};
+  let rows=[];
+  try{ rows=await fetchWeek(from,to); }
+  catch(e){ document.getElementById('calBody').textContent='تعذّر جلب المواعيد'; return; }
+  const by={}; store.items.forEach(i=>{ if(i.alid) by[i.alid]=i; });
+  const days=[[],[],[],[],[],[],[]];
+  rows.forEach(x=>{ const it=by[x.mediaId]; if(!it) return;
+    const d=rDayIdx(x.airingAt)-ws; if(d>=0&&d<7) days[d].push({x:x,it:it}); });
+  days.forEach(a=>a.sort((p,q)=>p.x.airingAt-q.x.airingAt));
+  let g='<div class="calgrid">';
+  for(let d=0;d<7;d++){
+    const ts=(ws+d)*86400-RSH+43200;
+    g+='<div class="calday'+((ws+d)===todayIdx?' today':'')+'">'+
+       '<div class="dh">'+DAYN[d]+' \u00b7 '+CAL_D.format(new Date(ts*1000))+'</div>';
+    days[d].forEach(o=>{ const st=SMAP[o.it.s]||['','','#ccc'];
+      g+='<div class="calep" style="border-color:'+st[2]+'">'+
+         '<span class="n" title="'+esc(o.it.t)+'">'+esc(o.it.t)+'</span>'+
+         '<span class="m">الحلقة '+(+o.x.episode)+' \u00b7 '+CAL_T.format(new Date(o.x.airingAt*1000))+'</span></div>';
+    });
+    g+='</div>';
+  }
+  g+='</div>';
+  const empty=days.every(a=>!a.length);
+  document.getElementById('calBody').innerHTML=
+    g+(empty?'<div style="font-size:.78rem;color:#888;margin-top:8px">ما فيه حلقات من قائمتك هذا الأسبوع.</div>':
+      '<div style="font-size:.68rem;color:#aaa;margin-top:8px">بتوقيت الرياض · أرقام الحلقات فقط، بدون عناوين</div>');
 }
 
 /* ================= الحلقات القادمة ================= */
