@@ -550,10 +550,12 @@ function draw(){
     const fx=document.createElement('div');
     fx.style.cssText='margin:0 0 12px';
     fx.innerHTML='<button id="autoFix">مطابقة تلقائية للكل</button>'+
-      '<span style="font-size:.72rem;color:#888;margin-inline-start:9px">'+
-      'تبحث بالاسم وتربط فقط عند التطابق الواضح — الملتبس يبقى لك</span>';
+      '<span id="fixStat" style="font-size:.74rem;color:#6c63c9;margin-inline-start:9px">'+
+      'تبحث بالاسم وتربط فقط عند التطابق الواضح — الملتبس يبقى لك</span>'+
+      '<div style="font-size:.72rem;color:#aaa;margin-top:5px">تستغرق نحو ثانية لكل عنصر — لا تغلق الصفحة.</div>';
     root.appendChild(fx);
-    document.getElementById('autoFix').onclick=e=>{ e.target.disabled=true; autoFixIds(); };
+    document.getElementById('autoFix').onclick=e=>{
+      e.target.disabled=true; e.target.textContent='جارٍ المطابقة…'; autoFixIds(); };
     const g=document.createElement('div'); g.className='grid';
     list.forEach(i=>g.appendChild(card(i))); root.appendChild(g);
     if(!list.length) root.innerHTML='<div class="empty">كل العناصر لها معرّف \u2713</div>';
@@ -924,13 +926,17 @@ function titleMatch(q,cand){
 async function autoFixIds(){
   const pool=store.items.filter(i=>!i.alid);
   if(!pool.length){ msg.textContent='ما فيه عناصر بدون معرّف'; return; }
+  const st0=document.getElementById('fixStat');
+  if(st0) st0.textContent='بدأت المطابقة \u2026 ('+pool.length+' عنصر)';
   let fixed=0, amb=0;
   const q='query($s:String){Page(perPage:6){media(search:$s,type:ANIME,isAdult:false)'+
     '{id idMal seasonYear episodes source genres coverImage{large}'+
     'title{romaji english native} synonyms}}}';
   for(let n=0;n<pool.length;n++){
     const it=pool[n];
-    msg.textContent='مطابقة تلقائية… '+(n+1)+'/'+pool.length+'  (تم '+fixed+')';
+    const line='مطابقة تلقائية… '+(n+1)+'/'+pool.length+'  \u00b7  طوبق '+fixed;
+    msg.textContent=line;
+    const st=document.getElementById('fixStat'); if(st) st.textContent=line;
     try{
       const r=await fetch('https://graphql.anilist.co',{method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -956,7 +962,9 @@ async function autoFixIds(){
     await new Promise(r=>setTimeout(r,750));
   }
   save(); draw();
-  msg.textContent='طوبقت '+fixed+' \u2713 · بقيت '+amb+' تحتاج مطابقة يدوية';
+  const done='طوبقت '+fixed+' \u2713  \u00b7  بقيت '+amb+' تحتاج مطابقة يدوية';
+  msg.textContent=done;
+  const st2=document.getElementById('fixStat'); if(st2) st2.textContent=done;
   if(fixed) enrich2();
 }
 
